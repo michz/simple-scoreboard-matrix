@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; font-src 'self' *; style-src-elem 'self' *">
+    <meta http-equiv="X-Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; font-src 'self' *; style-src-elem 'self' *">
+
+    <link href="node_modules/modern-css-reset/dist/reset.min.css" rel="stylesheet" type="text/css">
+    <link href="node_modules/semantic-ui/dist/semantic.min.css" rel="stylesheet" type="text/css">
+    <link href="main-ui.css" rel="stylesheet" type="text/css">
+    <title>Simple Scoreboard Matrix</title>
+
+    <script>window.$ = window.jQuery = require('jquery');</script>
+  </head>
+  <body>
+
+    <table id="scoreBoard">
+      <thead id="scoreBoardHead">
+        <tr id="scoreBoardTitle">
+          <th></th>
+          <th>Gesamt</th>
+        </tr>
+      </thead>
+      <tbody id="scoreBoardBody">
+      </tbody>
+    </table>
+
+    <div>
+      <button id="btnAddRow"><i class="icon add"></i> Team</button>
+      <button id="btnAddColumn"><i class="icon add"></i> Runde</button>
+    </div>
+
+    <!--
+    We are using Node.js <span id="node-version"></span>,
+    Chromium <span id="chrome-version"></span>,
+    and Electron <span id="electron-version"></span>.
+    -->
+
+    <script src="./node_modules/semantic-ui/dist/semantic.min.js"></script>
+    <script src="./edit-ui.js"></script>
+  </body>
+</html>
