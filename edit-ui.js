@@ -54,6 +54,15 @@ $('#btnAddColumn').on('click', addColumn);
 
 $('#scoreBoard').on('change', 'input', valueChanged);
 
+$('.external-link').on('click', function (e) {
+    e.preventDefault();
+
+    const { shell } = require('electron');
+    shell.openExternal($(this).prop('href'));
+
+    return false;
+});
+
 // Start without loaded data
 
 
