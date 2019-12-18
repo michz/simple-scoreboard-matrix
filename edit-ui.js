@@ -1,5 +1,8 @@
 //$('#scoreBoardTitle').html('TEST');
 
+const electron = require('electron');
+const ipc = electron.ipcRenderer;
+
 var teams = [];
 
 var countColumns = function () {
@@ -46,6 +49,28 @@ var updateSums = function () {
 
 var valueChanged = function (e) {
     updateSums();
+    ipc.send('update-results', getResults());
+};
+
+var getResults = function () {
+    var results = [];
+
+    $('#scoreBoardBody tr').each(function (idx, element) {
+        var resultRow = {};
+        var i = 1;
+        resultRow.team = $(element).find('.teamName').val();
+
+        $(element).find('.result').each(function (idx, resultElement) {
+            resultRow[i.toString()] = $(resultElement).val();
+            i++;
+        });
+
+        resultRow.sum = $(element).find('.sum').text();
+
+        results.push(resultRow);
+    });
+
+    return results;
 };
 
 

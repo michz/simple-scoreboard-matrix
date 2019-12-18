@@ -15,7 +15,7 @@
 
     <script>
         window.$ = window.jQuery = require('jquery');
-        var serverUrl = 'http://localhost:38480';
+        window.serverUrl = 'http://localhost:38480';
     </script>
 </head>
 <body>
@@ -32,9 +32,12 @@
 </table>
 
 <div>
+    <button id="btnSave"><i class="icon save"></i> Save</button>
     <button id="btnAddRow"><i class="icon add"></i> Team</button>
     <button id="btnAddColumn"><i class="icon add"></i> Runde</button>
 </div>
+
+<div></div>
 
 
 <div>
