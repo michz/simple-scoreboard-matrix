@@ -12,13 +12,13 @@ function createWindow() {
         width: 800,
         height: 600,
         webPreferences: {
-            preload: path.join(__dirname, 'preload.js'),
+            preload: path.join(__dirname, 'src/preload.js'),
             nodeIntegration: true,
         },
     });
 
     // and load the index.html of the app.
-    mainWindow.loadFile('index.html');
+    mainWindow.loadFile('src/index.html');
 
     // Open the DevTools.
     // mainWindow.webContents.openDevTools()
@@ -96,17 +96,17 @@ http.createServer(function (req, res) {
         url += 'index.html';
     } else if (url === '/jquery.js') {
         res.setHeader('content-type', 'application/javascript');
-        res.write(fs.readFileSync('node_modules/jquery/dist/jquery.min.js'));
+        res.write(fs.readFileSync(__dirname + '/../node_modules/jquery/dist/jquery.min.js'));
         res.end();
         return;
     } else if (url === '/chart.js') {
         res.setHeader('content-type', 'application/javascript');
-        res.write(fs.readFileSync('node_modules/chart.js/dist/Chart.min.js'));
+        res.write(fs.readFileSync(__dirname + '/../node_modules/chart.js/dist/Chart.min.js'));
         res.end();
         return;
     } else if (url === '/reset.css') {
         res.setHeader('content-type', 'text/css');
-        res.write(fs.readFileSync('node_modules/modern-css-reset/dist/reset.min.css'));
+        res.write(fs.readFileSync(__dirname + '/../node_modules/modern-css-reset/dist/reset.min.css'));
         res.end();
         return;
     }
@@ -119,7 +119,8 @@ http.createServer(function (req, res) {
     }
 
     //var localFilePath = 'file://' + __dirname + '/remote' + url;
-    var localFilePath = './remote' + url;
+    var localFilePath = __dirname + '/../remote' + url;
+    console.log(localFilePath);
     if (fs.existsSync(localFilePath)) {
         res.setHeader('content-type', lookup(localFilePath) || 'application/octet-stream');
         res.write(fs.readFileSync(localFilePath));

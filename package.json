@@ -1,29 +1,35 @@
 {
-  "name": "electron-quick-start",
-  "version": "1.0.0",
-  "description": "A minimal Electron application",
-  "main": "main.js",
+  "name": "simple-scoreboard-matrix",
+  "version": "0.0.1-test",
+  "description": "A very simple and minimalistic scoreboard with remote capabilities",
+  "main": "src/main.js",
   "scripts": {
     "start": "electron ."
   },
-  "repository": "https://github.com/electron/electron-quick-start",
+  "repository": "https://github.com/michz/simple-scoreboard-matrix.git",
   "keywords": [
-    "Electron",
-    "quick",
-    "start",
-    "tutorial",
-    "demo"
+    "scoreboard",
+    "matrix",
+    "game"
   ],
-  "author": "GitHub",
-  "license": "CC0-1.0",
+  "author": "Michael Zapf",
+  "license": "MIT",
+  "config": {
+    "forge": "./forge.config.js"
+  },
   "devDependencies": {
-    "electron": "^7.1.5"
+    "electron": "^7.1.5",
+    "electron-forge": "^5.2.4",
+    "electron-forge-maker-nsis": "^22.2.0",
+    "electron-prebuilt-compile": "4.0.0"
   },
   "dependencies": {
     "chart.js": "^2.9.3",
+    "electron-compile": "^6.4.4",
+    "electron-squirrel-startup": "^1.0.0",
     "jquery": "^3.4.1",
     "mime-types": "^2.1.25",
     "modern-css-reset": "^1.0.4",
-    "semantic-ui": "^2.4.2"
+    "semantic-ui-css": "^2.4.1"
   }
 }
