@@ -1,5 +1,13 @@
-
-//$('#results').html('testestesete');
+var getNewDatasetStruct = function () {
+    return {
+        label: 'Punkte',
+        backgroundColor: 'rgb(0, 0, 150)',
+        borderWidth: 0,
+        data: [
+            0,
+        ]
+    };
+};
 
 var updateData = function () {
     $.get({
@@ -7,7 +15,14 @@ var updateData = function () {
         success: function (data) {
             $('#results').empty();
 
-            for (var i = 0; i < data.results.length; i++) {
+            var rowCount = data.results.length;
+            var currrentDatasetsCounts = window.chartData.labels.length;
+            if (rowCount < currrentDatasetsCounts) {
+                window.chartData.labels = [];
+                window.chartData.datasets[0].data = [];
+            }
+
+            for (var i = 0; i < rowCount; i++) {
                 var resultRow = data.results[i];
                 window.chartData.labels[i] = resultRow.team;
                 window.chartData.datasets[0].data[i] = resultRow.sum;
@@ -17,9 +32,10 @@ var updateData = function () {
                 window.chartInstance.update();
             }
         },
+        complete: function () {
+            window.setTimeout(updateData, 2000);
+        },
     });
-
-    window.setTimeout(updateData, 5000);
 };
 
 window.chartData = {

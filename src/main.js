@@ -15,6 +15,7 @@ function createWindow() {
         webPreferences: {
             preload: path.join(__dirname, 'preload.js'),
             nodeIntegration: true,
+            contextIsolation: false,
         },
     });
 
@@ -80,6 +81,12 @@ const ipc = require('electron').ipcMain;
 ipc.on('update-results', function (event, arg) {
     //win.webContents.send('targetPriceVal', arg)
     currentData.results = arg;
+
+    if (null !== currentlyLoadedFile) {
+        save(false);
+    } else {
+        mainWindow.send('not-saved-automatically', currentlyLoadedFile);
+    }
 });
 
 
@@ -182,7 +189,7 @@ const template = [
                     };
 
                     dialog.showOpenDialog(mainWindow, options, (filePaths) => {
-                        if (filePaths.length < 1) {
+                        if (undefined === filePaths || filePaths.length < 1) {
                             return;
                         }
 
@@ -204,7 +211,7 @@ const template = [
                     if (null === currentlyLoadedFile) {
                         saveAs();
                     } else {
-                        save();
+                        save(true);
                     }
                 },
             },
@@ -307,7 +314,6 @@ const save = function (notify) {
             mainWindow.send('file-saved', currentlyLoadedFile);
         }
     });
-
 };
 
 const saveAs = function () {
@@ -323,7 +329,11 @@ const saveAs = function () {
     };
 
     dialog.showSaveDialog(mainWindow, options, (filePath) => {
+        if (undefined === filePath) {
+            return;
+        }
+
         currentlyLoadedFile = filePath;
-        save();
+        save(true);
     });
 };

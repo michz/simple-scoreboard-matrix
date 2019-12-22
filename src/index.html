@@ -4,25 +4,23 @@
     <meta charset="UTF-8">
     <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
     <meta http-equiv="Content-Security-Policy"
-          content="default-src 'self'; script-src 'self' 'unsafe-inline'; font-src 'self' *; style-src-elem 'self' *">
+          content="default-src 'self' data: ; script-src 'self' 'unsafe-inline'; font-src 'self' data: *; style-src 'self' https://fonts.googleapis.com">
     <meta http-equiv="X-Content-Security-Policy"
-          content="default-src 'self'; script-src 'self' 'unsafe-inline'; font-src 'self' *; style-src-elem 'self' *">
+          content="default-src 'self' data: ; script-src 'self' 'unsafe-inline'; font-src 'self' data: *; style-src 'self' https://fonts.googleapis.com">
 
     <link href="../node_modules/modern-css-reset/dist/reset.min.css" rel="stylesheet" type="text/css">
     <link href="../node_modules/semantic-ui-css/semantic.min.css" rel="stylesheet" type="text/css">
+    <link href="../node_modules/toastr/build/toastr.min.css" rel="stylesheet" type="text/css">
     <link href="main-ui.css" rel="stylesheet" type="text/css">
     <title>Simple Scoreboard Matrix</title>
 
     <script>
         window.$ = window.jQuery = require('jquery');
+        window.toastr = require('toastr');
         window.serverUrl = 'http://localhost:38480';
     </script>
 </head>
 <body>
-
-<div>
-    <button id="btnSave"><i class="icon save"></i> Save</button>
-</div>
 
 <table id="scoreBoard">
     <thead id="scoreBoardHead">

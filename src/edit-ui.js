@@ -7,7 +7,7 @@ var countColumns = function () {
     return $('#scoreBoardHead tr:first th').length - 2;
 };
 
-var addRow = function () {
+var addRow = function (skipValueChangedHandler) {
     var rowContent = '';
     var columnCount = countColumns();
     for (var i = 0; i < columnCount; i++) {
@@ -21,15 +21,23 @@ var addRow = function () {
         '</tr>';
 
     $('#scoreBoardBody').append(row);
+
+    if (undefined === skipValueChangedHandler || true !== skipValueChangedHandler) {
+        valueChanged();
+    }
 };
 
-var addColumn = function () {
+var addColumn = function (skipValueChangedHandler) {
     var column = '<td><input class="result"></td>';
     $('#scoreBoardHead tr th:last').before('<th class="result-header">' + (countColumns() + 1) + '</th>');
 
     $('#scoreBoardBody tr').each(function (idx, element) {
         $(element).find('td:last').before(column);
     });
+
+    if (undefined === skipValueChangedHandler || true !== skipValueChangedHandler) {
+        valueChanged();
+    }
 };
 
 var updateSums = function () {
@@ -92,6 +100,13 @@ $('.external-link').on('click', function (e) {
 });
 
 
+ipc.on('not-saved-automatically', function (sender) {
+    toastr.warning(
+        'Speichere den Spielstand einmal manuell, damit das automatische Speichern funktioniert',
+        'Nicht automatisch gespeichert'
+    );
+});
+
 ipc.on('file-loaded', function (sender, data, filePath) {
     if (data.results === undefined) {
         throw new Error('Dateiformat unbekannt');
@@ -110,11 +125,11 @@ ipc.on('file-loaded', function (sender, data, filePath) {
     }
 
     for (var i = 0; i < countRows; i++) {
-        addRow();
+        addRow(true);
     }
 
     for (var i = 0; i < countColumns; i++) {
-        addColumn();
+        addColumn(true);
     }
 
     for (var i = 0; i < countRows; i++) {
@@ -128,19 +143,23 @@ ipc.on('file-loaded', function (sender, data, filePath) {
         }
     }
 
-    valueChanged();
+    updateSums();
 });
 
 ipc.on('file-saved', function (sender, filePath) {
-    console.log('TODO: Show saved notify');
+    toastr.success('Ergebnisse wurden gespeichert');
 });
 
 
 // Start without loaded data
 updateSums();
 
+toastr.options.timeOut = 1000;            // How long the toast will display without user interaction
+toastr.options.extendedTimeOut = 5000;    // How long the toast will display after a user hovers over it
 
 /*
 TODO:
 * Sortieren
+* Zeilen löschen
+* Spalten löschen
  */
