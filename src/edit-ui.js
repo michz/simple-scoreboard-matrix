@@ -3,8 +3,6 @@
 const electron = require('electron');
 const ipc = electron.ipcRenderer;
 
-var teams = [];
-
 var countColumns = function () {
     return $('#scoreBoardHead tr:first th').length - 2;
 };
@@ -27,7 +25,7 @@ var addRow = function () {
 
 var addColumn = function () {
     var column = '<td><input class="result"></td>';
-    $('#scoreBoardHead tr th:last').before('<th>' + (countColumns() + 1) + '</th>');
+    $('#scoreBoardHead tr th:last').before('<th class="result-header">' + (countColumns() + 1) + '</th>');
 
     $('#scoreBoardBody tr').each(function (idx, element) {
         $(element).find('td:last').before(column);
@@ -47,9 +45,14 @@ var updateSums = function () {
     });
 };
 
-var valueChanged = function (e) {
+var valueChanged = function () {
     updateSums();
     ipc.send('update-results', getResults());
+};
+
+var resetScoreboard = function () {
+    $('#scoreBoardBody').html('');
+    $('#scoreBoardHead .result-header').remove();
 };
 
 var getResults = function () {
@@ -88,21 +91,56 @@ $('.external-link').on('click', function (e) {
     return false;
 });
 
+
+ipc.on('file-loaded', function (sender, data, filePath) {
+    if (data.results === undefined) {
+        throw new Error('Dateiformat unbekannt');
+    }
+
+    var results = data.results;
+    var countRows = results.length;
+
+    // clear current rows and columns
+    resetScoreboard();
+
+    // Get (max) number of columns
+    var countColumns = 0;
+    for (var i = 0; i < countRows; i++) {
+        countColumns = Math.max(countColumns, Object.keys(results[i]).length - 2);
+    }
+
+    for (var i = 0; i < countRows; i++) {
+        addRow();
+    }
+
+    for (var i = 0; i < countColumns; i++) {
+        addColumn();
+    }
+
+    for (var i = 0; i < countRows; i++) {
+        var rowData = results[i];
+        var row = $('#scoreBoardBody tr').eq(i);
+        var columnCount = Object.keys(rowData).length - 2;
+
+        row.find('.teamName').val(rowData.team);
+        for (var j = 0; j <= columnCount; j++) {
+            row.find('.result').eq(j-1).val(rowData['' + j]);
+        }
+    }
+
+    valueChanged();
+});
+
+ipc.on('file-saved', function (sender, filePath) {
+    console.log('TODO: Show saved notify');
+});
+
+
 // Start without loaded data
-
-
-addColumn();
-addColumn();
-addColumn();
-addColumn();
-addRow();
-addRow();
-
 updateSums();
 
 
 /*
 TODO:
 * Sortieren
-* Daten mit Backend austauschen
  */
