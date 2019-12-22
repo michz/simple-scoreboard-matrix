@@ -1,0 +1,96 @@
+language: node_js
+node_js: '11'
+os: linux
+
+env:
+  global:
+    - secure: "y99V+G4zjBxMtJf/p04nbacmJaxfnAEekTSy2mQP6hC4S97fBN3Wt+MaPQXFMoXK3r8IWx7r1tbDIdoaJguBYj6X2AkRRUUoObn0Di5J7GH/AFi/J1ivF/TAcsuz11K2kYnekkIsoKH4OQppmWS3ZJFz/mjDRC689OarnmxvNKnoVfFBok+WSVdC10hj77Fe+t1xdwvynct6NUegUMjJ8apMT8eS7qNRcTrz5NIFBCbk3WgV06ies/zPhytF8ki8sgzuc5RYdqexCzXIOO/XwBz0q5ah1YpgBr3ZJdZ/kYVdT9h25C8S2pbeuM7BemXKsXVkoi8SyPOkxwpUqh8YvJH26gsZJpHgw37aHToYwrmjS1h/3sbrcfSFfhg6/nnzv56OaD9Fw7zTXyw8hEByyWA4/5cnANLYfKG6kYMhETshhjM0G33NOJtT23kQFhSKMaieuqhJpnWyAU1EbkWFh3fwz5WY0nLXxYhfurB6xysqcCof+gkACO+SpTLbVoEwyOP7Ypw+J8It/NWp9xhOPTL08TlKIkzi4hBXZK3xGJMfpU3qtMNJzcoUZJlI/9pjeygrgdepRxaFG2+e0Z8Qrpm4chJo+OXD1zI8ZonEoGR2DB3qjVSyWb4N4s8Ifxx+6vVLX6dPMIfA579k3AQiV1SQ7lr2al14m1PO0mz3Rrk="
+
+jobs:
+  include:
+    - os: osx
+      osx_image: xcode10.2
+      language: node_js
+      node_js: "10"
+      env:
+        - MY_BUILD_TARGET=darwin
+        - ELECTRON_CACHE=$HOME/.cache/electron
+        - ELECTRON_BUILDER_CACHE=$HOME/.cache/electron-builder
+
+    - os: linux
+      services: docker
+      language: generic
+      env:
+        - MY_BUILD_TARGET=linux
+
+    - os: linux
+      services: docker
+      language: generic
+      env:
+        - MY_BUILD_TARGET=win32
+
+cache:
+  directories:
+    - node_modules
+    - $HOME/.cache/electron
+    - $HOME/.cache/electron-builder
+
+script:
+  - |
+    if [ "$TRAVIS_OS_NAME" == "linux" ] && [ "$MY_BUILD_TARGET" == "linux" ]; then
+      docker run --rm \
+        -e GITHUB_TOKEN \
+        -v ${PWD}:/project \
+        -v ~/.cache/electron:/root/.cache/electron \
+        -v ~/.cache/electron-builder:/root/.cache/electron-builder \
+        electronuserland/builder:wine \
+        /bin/bash -c "apt-get update && apt-get install -y fakeroot zip && npm install && node_modules/electron-forge/dist/electron-forge.js make --platform=linux"
+    elif [ "$TRAVIS_OS_NAME" == "linux" ] && [ "$MY_BUILD_TARGET" == "win32" ]; then
+      docker run --rm \
+        -e GITHUB_TOKEN \
+        -v ${PWD}:/project \
+        -v ~/.cache/electron:/root/.cache/electron \
+        -v ~/.cache/electron-builder:/root/.cache/electron-builder \
+        electronuserland/builder:wine \
+        /bin/bash -c "apt-get update && apt-get install -y fakeroot zip && npm install && node_modules/electron-forge/dist/electron-forge.js make --platform=win32"
+    else
+      npm install && node_modules/electron-forge/dist/electron-forge.js make
+    fi
+
+#        /bin/bash -c "apt-get update && apt-get install -y fakeroot zip && npm install && node_modules/electron-forge/dist/electron-forge.js make --platform=linux && node_modules/electron-forge/dist/electron-forge.js publish && node_modules/electron-forge/dist/electron-forge.js make --platform=win32 && node_modules/electron-forge/dist/electron-forge.js publish && ls -la out/ && ls -la out/simple-scoreboard-matrix/ && ls -la out/simple-scoreboard-matrix/make/"
+#      npm install && node_modules/electron-forge/dist/electron-forge.js make && node_modules/electron-forge/dist/electron-forge.js publish
+
+before_cache:
+  - rm -rf $HOME/.cache/electron-builder/wine
+
+#branches:
+#  except:
+#    - "/^v\\d+\\.\\d+\\.\\d+$/"
+
+# @TODO Fix "publish" step to also upload windows binaries
+#       (Perhaps use GitHub's implementation below?)
+
+deploy:
+  - provider: releases
+    token: "$GITHUB_TOKEN"
+    file_glob: true
+    file:
+      - "out/simple-scoreboard-matrix/make/*"
+    skip_cleanup: true
+    on:
+      tags: true
+      condition: "! $TRAVIS_TAG =~ rc[0-9]+$"
+    draft: false
+    prerelease: false
+
+  - provider: releases
+    token: "$GITHUB_TOKEN"
+    file_glob: true
+    file:
+      - "out/simple-scoreboard-matrix/make/*"
+    skip_cleanup: true
+    on:
+      tags: true
+      condition: "$TRAVIS_TAG =~ rc[0-9]+$"
+    draft: false
+    prerelease: true
