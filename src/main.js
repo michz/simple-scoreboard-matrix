@@ -1,6 +1,7 @@
 // Modules to control application life and create native browser window
-const {app, BrowserWindow} = require('electron');
+const {app, BrowserWindow, dialog, Menu} = require('electron');
 const path = require('path');
+const isMac = process.platform === 'darwin';
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -12,8 +13,9 @@ function createWindow() {
         width: 800,
         height: 600,
         webPreferences: {
-            preload: path.join(__dirname, 'src/preload.js'),
+            preload: path.join(__dirname, 'preload.js'),
             nodeIntegration: true,
+            contextIsolation: false,
         },
     });
 
@@ -57,6 +59,7 @@ app.on('activate', function () {
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and require them here.
 
+var currentlyLoadedFile = null;
 var currentData = {
     results: [],
 };
@@ -78,6 +81,12 @@ const ipc = require('electron').ipcMain;
 ipc.on('update-results', function (event, arg) {
     //win.webContents.send('targetPriceVal', arg)
     currentData.results = arg;
+
+    if (null !== currentlyLoadedFile) {
+        save(false);
+    } else {
+        mainWindow.send('not-saved-automatically', currentlyLoadedFile);
+    }
 });
 
 
@@ -120,7 +129,6 @@ http.createServer(function (req, res) {
 
     //var localFilePath = 'file://' + __dirname + '/remote' + url;
     var localFilePath = __dirname + '/../remote' + url;
-    console.log(localFilePath);
     if (fs.existsSync(localFilePath)) {
         res.setHeader('content-type', lookup(localFilePath) || 'application/octet-stream');
         res.write(fs.readFileSync(localFilePath));
@@ -134,3 +142,198 @@ http.createServer(function (req, res) {
     res.statusCode = 404;
     res.end(); //end the response
 }).listen(38480);
+
+
+// application menu
+
+const template = [
+    // { role: 'appMenu' }
+    ...(isMac ? [{
+        label: app.name,
+        submenu: [
+            { role: 'about' },
+            { type: 'separator' },
+            { role: 'services' },
+            { type: 'separator' },
+            { role: 'hide' },
+            { role: 'hideothers' },
+            { role: 'unhide' },
+            { type: 'separator' },
+            { role: 'quit' }
+        ]
+    }] : []),
+    // { role: 'fileMenu' }
+    {
+        label: 'File',
+        submenu: [
+            {
+                label: 'Neu',
+                click: function () {
+                    currentlyLoadedFile = null;
+                    currentData = { results: [] };
+                    mainWindow.send('file-loaded', currentData, currentlyLoadedFile);
+                },
+            },
+            {
+                label: 'Öffnen...',
+                click: function () {
+                    const options = {
+                        title: 'Spielstand laden',
+                        //defaultPath: '/path/to/something/',
+                        //buttonLabel: 'Do it',
+                        filters: [
+                          { name: 'json', extensions: ['json'] }
+                        ],
+                        //properties: ['showHiddenFiles'],
+                        //message: 'This message will only be shown on macOS'
+                    };
+
+                    dialog.showOpenDialog(mainWindow, options, (filePaths) => {
+                        if (undefined === filePaths || filePaths.length < 1) {
+                            return;
+                        }
+
+                        fs.readFile(filePaths[0], 'utf8',  (err, data) => {
+                            if (err) {
+                                throw err;
+                            }
+
+                            currentlyLoadedFile = filePaths[0];
+                            currentData = JSON.parse(data);
+                            mainWindow.send('file-loaded', currentData, currentlyLoadedFile);
+                        });
+                    });
+                },
+            },
+            {
+                label: 'Speichern',
+                click: function () {
+                    if (null === currentlyLoadedFile) {
+                        saveAs();
+                    } else {
+                        save(true);
+                    }
+                },
+            },
+            {
+                label: 'Speichern unter...',
+                click: function () {
+                    saveAs();
+                },
+            },
+            { type: 'separator' },
+            (isMac ? { role: 'close' } : { role: 'quit' }),
+        ]
+    },
+    // { role: 'editMenu' }
+    {
+        label: 'Edit',
+        submenu: [
+            { role: 'undo' },
+            { role: 'redo' },
+            { type: 'separator' },
+            { role: 'cut' },
+            { role: 'copy' },
+            { role: 'paste' },
+            ...(isMac ? [
+                { role: 'pasteAndMatchStyle' },
+                { role: 'delete' },
+                { role: 'selectAll' },
+                { type: 'separator' },
+                {
+                    label: 'Speech',
+                    submenu: [
+                        { role: 'startspeaking' },
+                        { role: 'stopspeaking' }
+                    ]
+                }
+            ] : [
+                { role: 'delete' },
+                { type: 'separator' },
+                { role: 'selectAll' }
+            ])
+        ]
+    },
+    // { role: 'viewMenu' }
+    {
+        label: 'View',
+        submenu: [
+            { role: 'reload' },
+            { role: 'forcereload' },
+            { role: 'toggledevtools' },
+            { type: 'separator' },
+            { role: 'resetzoom' },
+            { role: 'zoomin' },
+            { role: 'zoomout' },
+            { type: 'separator' },
+            { role: 'togglefullscreen' }
+        ]
+    },
+    // { role: 'windowMenu' }
+    {
+        label: 'Window',
+        submenu: [
+            { role: 'minimize' },
+            { role: 'zoom' },
+            ...(isMac ? [
+                { type: 'separator' },
+                { role: 'front' },
+                { type: 'separator' },
+                { role: 'window' }
+            ] : [
+                { role: 'close' }
+            ])
+        ]
+    },
+    /*
+    {
+        role: 'help',
+        submenu: [
+            {
+                label: 'Learn More',
+                click: async () => {
+                    const { shell } = require('electron');
+                    await shell.openExternal('https://electronjs.org');
+                }
+            }
+        ]
+    }
+     */
+];
+
+const menu = Menu.buildFromTemplate(template);
+Menu.setApplicationMenu(menu);
+
+const save = function (notify) {
+    fs.writeFile(currentlyLoadedFile, JSON.stringify(currentData), 'utf8',  (err) => {
+        if (err) {
+            throw err;
+        }
+
+        if (true === notify) {
+            mainWindow.send('file-saved', currentlyLoadedFile);
+        }
+    });
+};
+
+const saveAs = function () {
+    const options = {
+        title: 'Spielstand speichern',
+        //defaultPath: '/path/to/something/',
+        //buttonLabel: 'Do it',
+        filters: [
+            { name: 'json', extensions: ['json'] }
+        ],
+        //properties: ['showHiddenFiles'],
+        //message: 'This message will only be shown on macOS'
+    };
+
+    dialog.showSaveDialog(mainWindow, options, (filePath) => {
+        if (undefined === filePath) {
+            return;
+        }
+
+        currentlyLoadedFile = filePath;
+        save(true);
+    });
+};

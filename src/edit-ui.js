@@ -3,13 +3,11 @@
 const electron = require('electron');
 const ipc = electron.ipcRenderer;
 
-var teams = [];
-
 var countColumns = function () {
     return $('#scoreBoardHead tr:first th').length - 2;
 };
 
-var addRow = function () {
+var addRow = function (skipValueChangedHandler) {
     var rowContent = '';
     var columnCount = countColumns();
     for (var i = 0; i < columnCount; i++) {
@@ -23,15 +21,23 @@ var addRow = function () {
         '</tr>';
 
     $('#scoreBoardBody').append(row);
+
+    if (undefined === skipValueChangedHandler || true !== skipValueChangedHandler) {
+        valueChanged();
+    }
 };
 
-var addColumn = function () {
+var addColumn = function (skipValueChangedHandler) {
     var column = '<td><input class="result"></td>';
-    $('#scoreBoardHead tr th:last').before('<th>' + (countColumns() + 1) + '</th>');
+    $('#scoreBoardHead tr th:last').before('<th class="result-header">' + (countColumns() + 1) + '</th>');
 
     $('#scoreBoardBody tr').each(function (idx, element) {
         $(element).find('td:last').before(column);
     });
+
+    if (undefined === skipValueChangedHandler || true !== skipValueChangedHandler) {
+        valueChanged();
+    }
 };
 
 var updateSums = function () {
@@ -47,9 +53,14 @@ var updateSums = function () {
     });
 };
 
-var valueChanged = function (e) {
+var valueChanged = function () {
     updateSums();
     ipc.send('update-results', getResults());
+};
+
+var resetScoreboard = function () {
+    $('#scoreBoardBody').html('');
+    $('#scoreBoardHead .result-header').remove();
 };
 
 var getResults = function () {
@@ -88,21 +99,67 @@ $('.external-link').on('click', function (e) {
     return false;
 });
 
+
+ipc.on('not-saved-automatically', function (sender) {
+    toastr.warning(
+        'Speichere den Spielstand einmal manuell, damit das automatische Speichern funktioniert',
+        'Nicht automatisch gespeichert'
+    );
+});
+
+ipc.on('file-loaded', function (sender, data, filePath) {
+    if (data.results === undefined) {
+        throw new Error('Dateiformat unbekannt');
+    }
+
+    var results = data.results;
+    var countRows = results.length;
+
+    // clear current rows and columns
+    resetScoreboard();
+
+    // Get (max) number of columns
+    var countColumns = 0;
+    for (var i = 0; i < countRows; i++) {
+        countColumns = Math.max(countColumns, Object.keys(results[i]).length - 2);
+    }
+
+    for (var i = 0; i < countRows; i++) {
+        addRow(true);
+    }
+
+    for (var i = 0; i < countColumns; i++) {
+        addColumn(true);
+    }
+
+    for (var i = 0; i < countRows; i++) {
+        var rowData = results[i];
+        var row = $('#scoreBoardBody tr').eq(i);
+        var columnCount = Object.keys(rowData).length - 2;
+
+        row.find('.teamName').val(rowData.team);
+        for (var j = 0; j <= columnCount; j++) {
+            row.find('.result').eq(j-1).val(rowData['' + j]);
+        }
+    }
+
+    updateSums();
+});
+
+ipc.on('file-saved', function (sender, filePath) {
+    toastr.success('Ergebnisse wurden gespeichert');
+});
+
+
 // Start without loaded data
-
-
-addColumn();
-addColumn();
-addColumn();
-addColumn();
-addRow();
-addRow();
-
 updateSums();
 
+toastr.options.timeOut = 1000;            // How long the toast will display without user interaction
+toastr.options.extendedTimeOut = 5000;    // How long the toast will display after a user hovers over it
 
 /*
 TODO:
 * Sortieren
-* Daten mit Backend austauschen
+* Zeilen löschen
+* Spalten löschen
  */
