@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
     <meta http-equiv="Content-Security-Policy"
-          content="default-src 'self' data: ; script-src 'self' 'unsafe-inline'; font-src 'self' data: *; style-src 'self' https://fonts.googleapis.com">
+          content="default-src 'self' data: ; script-src 'self' 'unsafe-inline'; font-src 'self' data: *; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com">
     <meta http-equiv="X-Content-Security-Policy"
-          content="default-src 'self' data: ; script-src 'self' 'unsafe-inline'; font-src 'self' data: *; style-src 'self' https://fonts.googleapis.com">
+          content="default-src 'self' data: ; script-src 'self' 'unsafe-inline'; font-src 'self' data: *; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com">
 
     <link href="../node_modules/modern-css-reset/dist/reset.min.css" rel="stylesheet" type="text/css">
     <link href="../node_modules/semantic-ui-css/semantic.min.css" rel="stylesheet" type="text/css">
@@ -44,6 +44,25 @@
 <div>
   Remote: <a href="http://localhost:38480/" class="external-link">http://localhost:38480/</a>
 </div>
+
+
+<div class="ui basic modal" id="confirm-modal">
+    <div class="ui icon header">
+        <i class="exclamation icon"></i>
+    </div>
+    <div class="content">
+    </div>
+    <div class="actions">
+        <div class="ui red basic cancel deny inverted button">
+            Nein
+        </div>
+        <div class="ui green ok inverted button">
+            <i class="checkmark icon"></i>
+            Ja
+        </div>
+    </div>
+</div>
+
 
 <!--
 We are using Node.js <span id="node-version"></span>,

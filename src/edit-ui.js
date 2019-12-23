@@ -41,34 +41,57 @@ var addColumn = function (skipValueChangedHandler) {
 };
 
 var deleteRow = function (e) {
-    // Get index of selected row: $('#scoreBoardBody tr').index($(this).closest('tr'));
-    $(this).closest('tr').remove();
-    valueChanged();
+    var that = this;
+    showConfirmModal(
+        'Soll die Zeile wirklich gelöscht werden? Dabei werden auch sämtliche Ergebnisse dieser Zeile gelöscht. Dieser Vorgang kann nicht rückgängig gemacht werden!',
+        function () {
+            // Get index of selected row: $('#scoreBoardBody tr').index($(this).closest('tr'));
+            $(that).closest('tr').remove();
+            valueChanged();
+        }
+    );
 };
 
 var deleteColumn = function (e) {
-    var index = $('#scoreBoardHead th').index($(this).closest('th'));
-    //var currentColumnCount = countColumns();
-    var countRows = $('#scoreBoardBody tr').length;
+    var that = this;
+    showConfirmModal(
+        'Soll die Spalte wirklich gelöscht werden? Dabei werden auch sämtliche Ergebnisse dieser Spalte gelöscht. Dieser Vorgang kann nicht rückgängig gemacht werden!',
+        function () {
+            var index = $('#scoreBoardHead th').index($(that).closest('th'));
+            //var currentColumnCount = countColumns();
+            var countRows = $('#scoreBoardBody tr').length;
 
-    // remove header
-    $(this).closest('th').remove();
+            // remove header
+            $(that).closest('th').remove();
 
-    // Delete the results of the current column
-    for (var j = 0; j < countRows; j++) {
-        $('#scoreBoardBody tr').eq(j).find('.result').eq(index-1).closest('td').remove();
-    }
+            // Delete the results of the current column
+            for (var j = 0; j < countRows; j++) {
+                $('#scoreBoardBody tr').eq(j).find('.result').eq(index-1).closest('td').remove();
+            }
 
-    // renumber headers
-    $('#scoreBoardHead th').each(function (idx, element) {
-        if (0 === idx) {
-            return;
+            // renumber headers
+            $('#scoreBoardHead th').each(function (idx, element) {
+                if (0 === idx) {
+                    return;
+                }
+
+                $(element).find('.column-number').text(idx);
+            });
+
+            valueChanged();
         }
+    );
+};
 
-        $(element).find('.column-number').text(idx);
+var showConfirmModal = function (text, yesCallback, noCallback) {
+    $('#confirm-modal .content').html(text);
+    $('#confirm-modal').modal({
+        closable: false,
+        onDeny: noCallback,
+        onApprove: yesCallback,
     });
 
-    valueChanged();
+    $('#confirm-modal').modal('show');
 };
 
 var updateSums = function () {
