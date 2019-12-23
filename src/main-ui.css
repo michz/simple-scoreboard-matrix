@@ -19,6 +19,42 @@ body {
     text-align: center;
 }
 
+#scoreBoard th {
+    position: relative;
+}
+
+#scoreBoard th .delete-column {
+    position: absolute;
+    top: 1px;
+    right: 4px;
+    opacity: 0;
+    cursor: pointer;
+}
+
+#scoreBoard th:hover .delete-column {
+    opacity: 0.9;
+}
+
+#scoreBoard .row-header {
+    position: relative;
+}
+
+#scoreBoard .row-header .delete-row {
+    position: absolute;
+    top: 7px;
+    left: 2px;
+    opacity: 0;
+    cursor: pointer;
+}
+
+#scoreBoard .row-header:hover .delete-row {
+    opacity: 0.9;
+}
+
+#scoreBoard .row-header .teamName {
+    padding-left: 26px;
+}
+
 #scoreBoard .row-header, #scoreBoard .row-header input {
     text-align: left;
 }
@@ -41,4 +77,8 @@ body {
 
 .sum {
     cursor: default;
+}
+
+#button-row {
+    /* @TODO */
 }

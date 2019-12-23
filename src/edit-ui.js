@@ -15,7 +15,7 @@ var addRow = function (skipValueChangedHandler) {
     }
 
     var row = '<tr>' +
-        '<td class="row-header"><input class="teamName" value="Team"></td>' +
+        '<td class="row-header"><span class="delete-row"><i class="icon trash"></i></span><input class="teamName" value="Team"></td>' +
         rowContent +
         '<td class="sum"></td>' +
         '</tr>';
@@ -29,7 +29,7 @@ var addRow = function (skipValueChangedHandler) {
 
 var addColumn = function (skipValueChangedHandler) {
     var column = '<td><input class="result"></td>';
-    $('#scoreBoardHead tr th:last').before('<th class="result-header">' + (countColumns() + 1) + '</th>');
+    $('#scoreBoardHead tr th:last').before('<th class="result-header"><span class="column-number">' + (countColumns() + 1) + '</span><span class="delete-column"><i class="icon trash"></i></span></th>');
 
     $('#scoreBoardBody tr').each(function (idx, element) {
         $(element).find('td:last').before(column);
@@ -38,6 +38,37 @@ var addColumn = function (skipValueChangedHandler) {
     if (undefined === skipValueChangedHandler || true !== skipValueChangedHandler) {
         valueChanged();
     }
+};
+
+var deleteRow = function (e) {
+    // Get index of selected row: $('#scoreBoardBody tr').index($(this).closest('tr'));
+    $(this).closest('tr').remove();
+    valueChanged();
+};
+
+var deleteColumn = function (e) {
+    var index = $('#scoreBoardHead th').index($(this).closest('th'));
+    //var currentColumnCount = countColumns();
+    var countRows = $('#scoreBoardBody tr').length;
+
+    // remove header
+    $(this).closest('th').remove();
+
+    // Delete the results of the current column
+    for (var j = 0; j < countRows; j++) {
+        $('#scoreBoardBody tr').eq(j).find('.result').eq(index-1).closest('td').remove();
+    }
+
+    // renumber headers
+    $('#scoreBoardHead th').each(function (idx, element) {
+        if (0 === idx) {
+            return;
+        }
+
+        $(element).find('.column-number').text(idx);
+    });
+
+    valueChanged();
 };
 
 var updateSums = function () {
@@ -88,8 +119,12 @@ var getResults = function () {
 $('#btnAddRow').on('click', addRow);
 $('#btnAddColumn').on('click', addColumn);
 
+$('#scoreBoard').on('click', '.delete-row', deleteRow);
+$('#scoreBoard').on('click', '.delete-column', deleteColumn);
 $('#scoreBoard').on('change', 'input', valueChanged);
 
+
+// Open all "external links" in system's browser
 $('.external-link').on('click', function (e) {
     e.preventDefault();
 
@@ -154,12 +189,14 @@ ipc.on('file-saved', function (sender, filePath) {
 // Start without loaded data
 updateSums();
 
+
+toastr.options.positionClass = 'toast-bottom-right';
 toastr.options.timeOut = 1000;            // How long the toast will display without user interaction
 toastr.options.extendedTimeOut = 5000;    // How long the toast will display after a user hovers over it
+
 
 /*
 TODO:
 * Sortieren
-* Zeilen löschen
 * Spalten löschen
  */
