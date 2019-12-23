@@ -221,5 +221,4 @@ toastr.options.extendedTimeOut = 5000;    // How long the toast will display aft
 /*
 TODO:
 * Sortieren
-* Spalten löschen
  */
