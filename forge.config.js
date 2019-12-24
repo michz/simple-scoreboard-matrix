@@ -8,7 +8,8 @@ module.exports = {
 //    packagerConfig: { ... },
 //    electronRebuildConfig: { ... },
     electronPackagerConfig: {
-        ignore: ["\\.idea", "\\.gitignore", "\\.git", "\\.travis.yml"]
+        ignore: ["\\.idea", "\\.gitignore", "\\.git", "\\.travis.yml"],
+        icon: "remote/favicon.ico",
     },
     publish: ['github'],
     github_repository: {
