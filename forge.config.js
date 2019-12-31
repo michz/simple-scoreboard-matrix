@@ -9,7 +9,7 @@ module.exports = {
 //    electronRebuildConfig: { ... },
     electronPackagerConfig: {
         ignore: ["\\.idea", "\\.gitignore", "\\.git", "\\.travis.yml"],
-        icon: "remote/favicon.ico",
+        icon: "build/icon.ico",
     },
     publish: ['github'],
     github_repository: {
