@@ -138,9 +138,49 @@ var getResults = function () {
     return results;
 };
 
+var triggerExportCsv = function () {
+    ipc.send('export-csv', getResults());
+};
+
+var showRemoteModal = function () {
+    ipc.send('get-ip-addresses');
+};
+
+ipc.on('return-get-ip-addresses', function (sender, port, addresses) {
+    var getUrl = function (address) {
+        var url = 'http://';
+        if ('IPv4' === address.family) {
+            url += address.address;
+        } else if ('IPv6' === address.family) {
+            url += '[' + address.address + ']';
+        }
+
+        if (port !== 80) {
+            url += ':' + port;
+        }
+
+        return url;
+    };
+
+    var content = '';
+    for (var i = 0; i < addresses.length; i++) {
+        var address = addresses[i];
+        var url = getUrl(address);
+        content += '<li class="' + address.family + ' ' + (address.isLocal ? 'local' : '') + '"><a class="external-link" href="' + url + '">' + url + '</a></li>' + "\n";
+    }
+    $('#remote-info-modal .content-addresses').html(content);
+
+    $('#remote-info-modal').modal({
+        closable: true
+    });
+
+    $('#remote-info-modal').modal('show');
+});
 
 $('#btnAddRow').on('click', addRow);
 $('#btnAddColumn').on('click', addColumn);
+$('#btnExportCSV').on('click', triggerExportCsv);
+$('#btnShowRemote').on('click', showRemoteModal);
 
 $('#scoreBoard').on('click', '.delete-row', deleteRow);
 $('#scoreBoard').on('click', '.delete-column', deleteColumn);
@@ -148,7 +188,7 @@ $('#scoreBoard').on('change', 'input', valueChanged);
 
 
 // Open all "external links" in system's browser
-$('.external-link').on('click', function (e) {
+$(document).on('click', '.external-link', function (e) {
     e.preventDefault();
 
     const { shell } = require('electron');
@@ -208,6 +248,10 @@ ipc.on('file-saved', function (sender, filePath) {
     toastr.success('Ergebnisse wurden gespeichert');
 });
 
+ipc.on('file-exported', function (sender, filePath) {
+    toastr.success('Ergebnisse wurden exportiert');
+});
+
 
 // Start without loaded data
 updateSums();
@@ -217,6 +261,12 @@ toastr.options.positionClass = 'toast-bottom-right';
 toastr.options.timeOut = 1000;            // How long the toast will display without user interaction
 toastr.options.extendedTimeOut = 5000;    // How long the toast will display after a user hovers over it
 
+
+//$('.ui.menu').menu();
+$(document).ready(function() {
+    $('.ui.dropdown').dropdown();
+    //$('.ui.menu').menu(); // Does not work and is not needed?
+});
 
 /*
 TODO:

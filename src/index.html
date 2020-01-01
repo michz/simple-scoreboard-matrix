@@ -22,6 +22,26 @@
 </head>
 <body>
 
+<div id="button-row-menu">
+    <div class="ui compact menu">
+        <a id="btnAddRow" class="item"><i class="icon add"></i> Team hinzufügen</a>
+        <a id="btnAddColumn" class="item"><i class="icon add"></i> Runde hinzufügen</a>
+        <div class="ui dropdown item">
+            Export <i class="dropdown icon"></i>
+            <div class="menu">
+                <a id="btnExportCSV" class="item"><i class="icon share square"></i> Ergebnisse als CSV</a>
+            </div>
+        </div>
+        <a id="btnShowRemote" class="item"><i class="icon chart pie"></i> Fernzugriff</a>
+        <!--
+        <div class="right menu">
+            <a class="item">Sign Up</a>
+            <a class="item">Help</a>
+        </div>
+        -->
+    </div>
+</div>
+
 <table id="scoreBoard">
     <thead id="scoreBoardHead">
     <tr id="scoreBoardTitle">
@@ -32,19 +52,6 @@
     <tbody id="scoreBoardBody">
     </tbody>
 </table>
-
-<div id="button-row">
-    <button id="btnAddRow"><i class="icon add"></i> Team</button>
-    <button id="btnAddColumn"><i class="icon add"></i> Runde</button>
-</div>
-
-<div></div>
-
-
-<div>
-  Remote: <a href="http://localhost:38480/" class="external-link">http://localhost:38480/</a>
-</div>
-
 
 <div class="ui basic modal" id="confirm-modal">
     <div class="ui icon header">
@@ -59,6 +66,21 @@
         <div class="ui green ok inverted button">
             <i class="checkmark icon"></i>
             Ja
+        </div>
+    </div>
+</div>
+
+<div class="ui modal" id="remote-info-modal">
+    <div class="ui icon header">
+        Fernzugriff
+    </div>
+    <div class="content">
+        <p>Unter folgenden Adressen ist die Weboberfläche erreichbar:</p>
+        <ul class="content-addresses"></ul>
+    </div>
+    <div class="actions">
+        <div class="ui ok button">
+            Schließen
         </div>
     </div>
 </div>

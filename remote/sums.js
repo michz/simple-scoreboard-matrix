@@ -1,14 +1,3 @@
-var getNewDatasetStruct = function () {
-    return {
-        label: 'Punkte',
-        backgroundColor: 'rgb(0, 0, 150)',
-        borderWidth: 0,
-        data: [
-            0,
-        ]
-    };
-};
-
 var updateData = function () {
     $.get({
         url: window.serverUrl + '/api/getData',

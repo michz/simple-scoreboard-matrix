@@ -2,6 +2,12 @@
 const {app, BrowserWindow, dialog, Menu} = require('electron');
 const path = require('path');
 const isMac = process.platform === 'darwin';
+const http = require('http');
+const fs = require('fs');
+const lookup = require('mime-types').lookup;
+const os = require('os');
+
+const httpPort = 38480;
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -89,11 +95,34 @@ ipc.on('update-results', function (event, arg) {
     }
 });
 
+ipc.on('export-csv', function (event, arg) {
+    exportCsv();
+});
+
+ipc.on('get-ip-addresses', function (event) {
+    var addresses = [];
+    var interfaces = os.networkInterfaces();
+
+    Object.keys(interfaces).forEach(function (ifname) {
+        interfaces[ifname].forEach(function (iface) {
+            if ('IPv4' !== iface.family && 'IPv6' !== iface.family) {
+                // skip over non-ipv4/ipv6 addresses
+                return;
+            }
+
+            addresses.push({
+                family: iface.family,
+                address: iface.address,
+                isLocal: iface.internal,
+            });
+        });
+    });
+
+    mainWindow.send('return-get-ip-addresses', httpPort, addresses);
+});
+
 
 // @TODO Put into own server.js ?
-const http = require('http');
-const fs = require('fs');
-const lookup = require('mime-types').lookup;
 
 //create a server object:
 http.createServer(function (req, res) {
@@ -106,6 +135,11 @@ http.createServer(function (req, res) {
     } else if (url === '/jquery.js') {
         res.setHeader('content-type', 'application/javascript');
         res.write(fs.readFileSync(__dirname + '/../node_modules/jquery/dist/jquery.min.js'));
+        res.end();
+        return;
+    } else if (url === '/robots.txt') {
+        res.setHeader('content-type', 'text/plain');
+        res.write('Disallow: /');
         res.end();
         return;
     } else if (url === '/chart.js') {
@@ -141,7 +175,7 @@ http.createServer(function (req, res) {
     // Do not know what to do with the request.
     res.statusCode = 404;
     res.end(); //end the response
-}).listen(38480);
+}).listen(httpPort);
 
 
 // application menu
@@ -164,7 +198,7 @@ const template = [
     }] : []),
     // { role: 'fileMenu' }
     {
-        label: 'File',
+        label: 'Datei',
         submenu: [
             {
                 label: 'Neu',
@@ -222,7 +256,7 @@ const template = [
                 },
             },
             { type: 'separator' },
-            (isMac ? { role: 'close' } : { role: 'quit' }),
+            (isMac ? { label: 'Beenden', role: 'close' } : { label: 'Beenden', role: 'quit' }),
         ]
     },
     // { role: 'editMenu' }
@@ -335,5 +369,49 @@ const saveAs = function () {
 
         currentlyLoadedFile = filePath;
         save(true);
+    });
+};
+
+const exportCsv = function () {
+    const options = {
+        title: 'Spielstand als CSV exportieren',
+        //defaultPath: '/path/to/something/',
+        //buttonLabel: 'Do it',
+        filters: [
+            { name: 'csv', extensions: ['csv'] }
+        ],
+        //properties: ['showHiddenFiles'],
+        //message: 'This message will only be shown on macOS'
+    };
+
+    dialog.showSaveDialog(mainWindow, options, (filePath) => {
+        if (undefined === filePath) {
+            return;
+        }
+
+        var output = '';
+        for (var i = 0; i < currentData.results.length; i++) {
+            var resultLine = currentData.results[i];
+            var data = [];
+            var keys = Object.keys(resultLine);
+
+            data.push(resultLine.team);
+            for (var j = 0; j < keys.length; j++) {
+                var key = keys[j];
+                if (false === isNaN(parseInt(key))) {
+                    data.push(resultLine[key]);
+                }
+            }
+
+            output += data.join(';') + "\n";
+        }
+
+        fs.writeFile(filePath, output, 'utf8',  (err) => {
+            if (err) {
+                throw err;
+            }
+
+            mainWindow.send('file-exported', filePath);
+        });
     });
 };
