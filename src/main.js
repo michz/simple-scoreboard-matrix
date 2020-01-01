@@ -137,6 +137,11 @@ http.createServer(function (req, res) {
         res.write(fs.readFileSync(__dirname + '/../node_modules/jquery/dist/jquery.min.js'));
         res.end();
         return;
+    } else if (url === '/robots.txt') {
+        res.setHeader('content-type', 'text/plain');
+        res.write('Disallow: /');
+        res.end();
+        return;
     } else if (url === '/chart.js') {
         res.setHeader('content-type', 'application/javascript');
         res.write(fs.readFileSync(__dirname + '/../node_modules/chart.js/dist/Chart.min.js'));
