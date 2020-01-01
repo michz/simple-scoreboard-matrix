@@ -198,7 +198,7 @@ const template = [
     }] : []),
     // { role: 'fileMenu' }
     {
-        label: 'File',
+        label: 'Datei',
         submenu: [
             {
                 label: 'Neu',
@@ -256,7 +256,7 @@ const template = [
                 },
             },
             { type: 'separator' },
-            (isMac ? { role: 'close' } : { role: 'quit' }),
+            (isMac ? { label: 'Beenden', role: 'close' } : { label: 'Beenden', role: 'quit' }),
         ]
     },
     // { role: 'editMenu' }
