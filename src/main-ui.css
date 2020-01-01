@@ -79,6 +79,6 @@ body {
     cursor: default;
 }
 
-#button-row {
-    /* @TODO */
+#button-row-menu {
+    margin: 0 0 1rem 0;
 }

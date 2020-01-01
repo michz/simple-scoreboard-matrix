@@ -138,9 +138,14 @@ var getResults = function () {
     return results;
 };
 
+var triggerExportCsv = function () {
+    ipc.send('export-csv', getResults());
+};
+
 
 $('#btnAddRow').on('click', addRow);
 $('#btnAddColumn').on('click', addColumn);
+$('#btnExportCSV').on('click', triggerExportCsv);
 
 $('#scoreBoard').on('click', '.delete-row', deleteRow);
 $('#scoreBoard').on('click', '.delete-column', deleteColumn);
@@ -208,6 +213,10 @@ ipc.on('file-saved', function (sender, filePath) {
     toastr.success('Ergebnisse wurden gespeichert');
 });
 
+ipc.on('file-exported', function (sender, filePath) {
+    toastr.success('Ergebnisse wurden exportiert');
+});
+
 
 // Start without loaded data
 updateSums();
@@ -217,6 +226,12 @@ toastr.options.positionClass = 'toast-bottom-right';
 toastr.options.timeOut = 1000;            // How long the toast will display without user interaction
 toastr.options.extendedTimeOut = 5000;    // How long the toast will display after a user hovers over it
 
+
+//$('.ui.menu').menu();
+$(document).ready(function() {
+    $('.ui.dropdown').dropdown();
+    //$('.ui.menu').menu(); // Does not work and is not needed?
+});
 
 /*
 TODO:
