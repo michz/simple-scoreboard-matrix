@@ -82,3 +82,24 @@ body {
 #button-row-menu {
     margin: 0 0 1rem 0;
 }
+
+.content-addresses a {
+    color: #000;
+}
+.content-addresses a:hover {
+    text-decoration: underline;
+}
+
+.content-addresses .local {
+    opacity: 0.6;
+}
+.content-addresses .local:after {
+    content: " (nur von diesem Computer)";
+}
+
+.content-addresses .IPv6 {
+    opacity: 0.6;
+}
+.content-addresses .IPv6:after {
+    content: " (nur via IPv6)"
+}

@@ -2,6 +2,12 @@
 const {app, BrowserWindow, dialog, Menu} = require('electron');
 const path = require('path');
 const isMac = process.platform === 'darwin';
+const http = require('http');
+const fs = require('fs');
+const lookup = require('mime-types').lookup;
+const os = require('os');
+
+const httpPort = 38480;
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -93,11 +99,30 @@ ipc.on('export-csv', function (event, arg) {
     exportCsv();
 });
 
+ipc.on('get-ip-addresses', function (event) {
+    var addresses = [];
+    var interfaces = os.networkInterfaces();
+
+    Object.keys(interfaces).forEach(function (ifname) {
+        interfaces[ifname].forEach(function (iface) {
+            if ('IPv4' !== iface.family && 'IPv6' !== iface.family) {
+                // skip over non-ipv4/ipv6 addresses
+                return;
+            }
+
+            addresses.push({
+                family: iface.family,
+                address: iface.address,
+                isLocal: iface.internal,
+            });
+        });
+    });
+
+    mainWindow.send('return-get-ip-addresses', httpPort, addresses);
+});
+
 
 // @TODO Put into own server.js ?
-const http = require('http');
-const fs = require('fs');
-const lookup = require('mime-types').lookup;
 
 //create a server object:
 http.createServer(function (req, res) {
@@ -145,7 +170,7 @@ http.createServer(function (req, res) {
     // Do not know what to do with the request.
     res.statusCode = 404;
     res.end(); //end the response
-}).listen(38480);
+}).listen(httpPort);
 
 
 // application menu
