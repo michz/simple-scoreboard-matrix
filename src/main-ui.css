@@ -90,16 +90,16 @@ body {
     text-decoration: underline;
 }
 
-.content-addresses .local {
-    opacity: 0.6;
-}
-.content-addresses .local:after {
-    content: " (nur von diesem Computer)";
-}
-
 .content-addresses .IPv6 {
     opacity: 0.6;
 }
 .content-addresses .IPv6:after {
     content: " (nur via IPv6)"
+}
+
+.content-addresses .local {
+    opacity: 0.6;
+}
+.content-addresses .local:after {
+    content: " (nur von diesem Computer)";
 }
