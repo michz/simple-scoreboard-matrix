@@ -99,6 +99,10 @@ ipc.on('export-csv', function (event, arg) {
     exportCsv();
 });
 
+ipc.on('export-ranking-csv', function (event, arg) {
+    exportRankingCsv();
+});
+
 ipc.on('get-ip-addresses', function (event) {
     var addresses = [];
     var interfaces = os.networkInterfaces();
@@ -119,6 +123,35 @@ ipc.on('get-ip-addresses', function (event) {
     });
 
     mainWindow.send('return-get-ip-addresses', httpPort, addresses);
+});
+
+const getRanking = function () {
+    let results = [];
+    let copiedData = JSON.parse(JSON.stringify(currentData));
+    copiedData.results.sort((a, b) => (parseFloat(a.sum) < parseFloat(b.sum)) ? 1 : -1);
+
+    let rank = 0;
+    let lastSum = 0;
+    for (let i = 0; i < copiedData.results.length; i++) {
+        let result = copiedData.results[i];
+
+        if (result.sum !== lastSum) {
+            rank++;
+        }
+
+        results.push({
+            rank: rank,
+            team: result.team,
+            sum: result.sum,
+        });
+
+        lastSum = result.sum;
+    }
+    return results;
+};
+
+ipc.on('show-ranking', function (event, arg) {
+    mainWindow.send('return-show-ranking', getRanking());
 });
 
 
@@ -404,6 +437,41 @@ const exportCsv = function () {
             }
 
             output += data.join(';') + "\n";
+        }
+
+        fs.writeFile(filePath, output, 'utf8',  (err) => {
+            if (err) {
+                throw err;
+            }
+
+            mainWindow.send('file-exported', filePath);
+        });
+    });
+};
+
+const exportRankingCsv = function () {
+    const options = {
+        title: 'Rangliste als CSV exportieren',
+        //defaultPath: '/path/to/something/',
+        //buttonLabel: 'Do it',
+        filters: [
+            { name: 'csv', extensions: ['csv'] }
+        ],
+        //properties: ['showHiddenFiles'],
+        //message: 'This message will only be shown on macOS'
+    };
+
+    dialog.showSaveDialog(mainWindow, options, (filePath) => {
+        if (undefined === filePath) {
+            return;
+        }
+
+        let ranking = getRanking();
+        let output = '';
+        for (let i = 0; i < ranking.length; i++) {
+            const resultLine = ranking[i];
+
+            output += Object.values(resultLine).join(';') + "\n";
         }
 
         fs.writeFile(filePath, output, 'utf8',  (err) => {

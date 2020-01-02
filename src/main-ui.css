@@ -103,3 +103,26 @@ body {
 .content-addresses .local:after {
     content: " (nur von diesem Computer)";
 }
+
+#ranking-modal .content table {
+    margin: 0 auto;
+    border-collapse: collapse;
+}
+
+#ranking-modal .content td {
+    padding: 1rem;
+    border-bottom: 1px solid #999;
+    font-size: 1.3em;
+}
+
+#ranking-modal .content tr:last-child td {
+    border-bottom: 0;
+}
+
+#ranking-modal .content td.rank {
+    font-weight: bold;
+}
+
+#ranking-modal .content td.rank:after {
+    content: '.';
+}
