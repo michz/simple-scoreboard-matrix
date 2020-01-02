@@ -7,6 +7,8 @@ const fs = require('fs');
 const lookup = require('mime-types').lookup;
 const os = require('os');
 
+const fileExport = require('./fileExport');
+
 const httpPort = 38480;
 
 // Keep a global reference of the window object, if you don't, the window will
@@ -96,11 +98,11 @@ ipc.on('update-results', function (event, arg) {
 });
 
 ipc.on('export-csv', function (event, arg) {
-    exportCsv();
+    fileExport.csvResults(currentData, mainWindow);
 });
 
 ipc.on('export-ranking-csv', function (event, arg) {
-    exportRankingCsv();
+    fileExport.csvRanking(getRanking(), mainWindow);
 });
 
 ipc.on('get-ip-addresses', function (event) {
@@ -402,84 +404,5 @@ const saveAs = function () {
 
         currentlyLoadedFile = filePath;
         save(true);
-    });
-};
-
-const exportCsv = function () {
-    const options = {
-        title: 'Spielstand als CSV exportieren',
-        //defaultPath: '/path/to/something/',
-        //buttonLabel: 'Do it',
-        filters: [
-            { name: 'csv', extensions: ['csv'] }
-        ],
-        //properties: ['showHiddenFiles'],
-        //message: 'This message will only be shown on macOS'
-    };
-
-    dialog.showSaveDialog(mainWindow, options, (filePath) => {
-        if (undefined === filePath) {
-            return;
-        }
-
-        var output = '';
-        for (var i = 0; i < currentData.results.length; i++) {
-            var resultLine = currentData.results[i];
-            var data = [];
-            var keys = Object.keys(resultLine);
-
-            data.push(resultLine.team);
-            for (var j = 0; j < keys.length; j++) {
-                var key = keys[j];
-                if (false === isNaN(parseInt(key))) {
-                    data.push(resultLine[key]);
-                }
-            }
-
-            output += data.join(';') + "\n";
-        }
-
-        fs.writeFile(filePath, output, 'utf8',  (err) => {
-            if (err) {
-                throw err;
-            }
-
-            mainWindow.send('file-exported', filePath);
-        });
-    });
-};
-
-const exportRankingCsv = function () {
-    const options = {
-        title: 'Rangliste als CSV exportieren',
-        //defaultPath: '/path/to/something/',
-        //buttonLabel: 'Do it',
-        filters: [
-            { name: 'csv', extensions: ['csv'] }
-        ],
-        //properties: ['showHiddenFiles'],
-        //message: 'This message will only be shown on macOS'
-    };
-
-    dialog.showSaveDialog(mainWindow, options, (filePath) => {
-        if (undefined === filePath) {
-            return;
-        }
-
-        let ranking = getRanking();
-        let output = '';
-        for (let i = 0; i < ranking.length; i++) {
-            const resultLine = ranking[i];
-
-            output += Object.values(resultLine).join(';') + "\n";
-        }
-
-        fs.writeFile(filePath, output, 'utf8',  (err) => {
-            if (err) {
-                throw err;
-            }
-
-            mainWindow.send('file-exported', filePath);
-        });
     });
 };
