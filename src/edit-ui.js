@@ -152,7 +152,6 @@ var showRemoteModal = function () {
 
 var showRanking = function () {
     ipc.send('show-ranking');
-    return;
 };
 
 ipc.on('return-get-ip-addresses', function (sender, port, addresses) {
@@ -209,6 +208,26 @@ $('#btnShowRanking').on('click', showRanking);
 $('#scoreBoard').on('click', '.delete-row', deleteRow);
 $('#scoreBoard').on('click', '.delete-column', deleteColumn);
 $('#scoreBoard').on('change', 'input', valueChanged);
+
+$('#scoreBoardBody').on('keyup', 'input', function (e) {
+    if ($(this).is(":focus") && (13 === e.keyCode)) {
+        var row = $(this).closest('tr');
+        var cell = $(this).closest('td');
+        var nextRow = $(row).next('tr');
+        var index = $('td', row).index(cell);
+        var nextInput = $('td', nextRow).eq(index).find('input');
+
+        if (nextInput.length <= 0) {
+            nextInput = $('#scoreBoardBody tr:first td').eq(index+1).find('input');
+        }
+
+        if (nextInput.length <= 0) {
+            nextInput = $('#scoreBoardBody tr:first td:first').find('input');
+        }
+
+        nextInput.focus();
+    }
+});
 
 
 // Open all "external links" in system's browser
