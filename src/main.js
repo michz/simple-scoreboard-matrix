@@ -7,6 +7,9 @@ const fs = require('fs');
 const lookup = require('mime-types').lookup;
 const os = require('os');
 
+const fileExport = require('./fileExport');
+const data = require('./data');
+
 const httpPort = 38480;
 
 // Keep a global reference of the window object, if you don't, the window will
@@ -65,15 +68,12 @@ app.on('activate', function () {
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and require them here.
 
-var currentlyLoadedFile = null;
-var currentData = {
-    results: [],
-};
+let currentlyLoadedFile = null;
 
 const apiHandler = function (url, req, res) {
     if (url === 'getData') {
         res.setHeader('content-type', 'application/json');
-        res.write(JSON.stringify(currentData));
+        res.write(JSON.stringify(data.getCurrentData()));
         res.end();
         return;
     }
@@ -86,7 +86,7 @@ const ipc = require('electron').ipcMain;
 
 ipc.on('update-results', function (event, arg) {
     //win.webContents.send('targetPriceVal', arg)
-    currentData.results = arg;
+    data.setCurrentDataResults(arg);
 
     if (null !== currentlyLoadedFile) {
         save(false);
@@ -96,12 +96,16 @@ ipc.on('update-results', function (event, arg) {
 });
 
 ipc.on('export-csv', function (event, arg) {
-    exportCsv();
+    fileExport.csvResults(data.getCurrentData(), mainWindow);
+});
+
+ipc.on('export-ranking-csv', function (event, arg) {
+    fileExport.csvRanking(data.getRanking(), mainWindow);
 });
 
 ipc.on('get-ip-addresses', function (event) {
-    var addresses = [];
-    var interfaces = os.networkInterfaces();
+    let addresses = [];
+    const interfaces = os.networkInterfaces();
 
     Object.keys(interfaces).forEach(function (ifname) {
         interfaces[ifname].forEach(function (iface) {
@@ -121,12 +125,16 @@ ipc.on('get-ip-addresses', function (event) {
     mainWindow.send('return-get-ip-addresses', httpPort, addresses);
 });
 
+ipc.on('show-ranking', function (event, arg) {
+    mainWindow.send('return-show-ranking', data.getRanking());
+});
+
 
 // @TODO Put into own server.js ?
 
 //create a server object:
 http.createServer(function (req, res) {
-    var url = req.url;
+    let url = req.url;
     if (url.startsWith('/api/')) {
         apiHandler(url.substr(5), req, res);
         return;
@@ -162,7 +170,7 @@ http.createServer(function (req, res) {
     }
 
     //var localFilePath = 'file://' + __dirname + '/remote' + url;
-    var localFilePath = __dirname + '/../remote' + url;
+    const localFilePath = __dirname + '/../remote' + url;
     if (fs.existsSync(localFilePath)) {
         res.setHeader('content-type', lookup(localFilePath) || 'application/octet-stream');
         res.write(fs.readFileSync(localFilePath));
@@ -204,8 +212,8 @@ const template = [
                 label: 'Neu',
                 click: function () {
                     currentlyLoadedFile = null;
-                    currentData = { results: [] };
-                    mainWindow.send('file-loaded', currentData, currentlyLoadedFile);
+                    data.setCurrentData({ results: [] });
+                    mainWindow.send('file-loaded', data.getCurrentData(), currentlyLoadedFile);
                 },
             },
             {
@@ -227,14 +235,14 @@ const template = [
                             return;
                         }
 
-                        fs.readFile(filePaths[0], 'utf8',  (err, data) => {
+                        fs.readFile(filePaths[0], 'utf8',  (err, fileContents) => {
                             if (err) {
                                 throw err;
                             }
 
                             currentlyLoadedFile = filePaths[0];
-                            currentData = JSON.parse(data);
-                            mainWindow.send('file-loaded', currentData, currentlyLoadedFile);
+                            data.setCurrentData(JSON.parse(fileContents));
+                            mainWindow.send('file-loaded', data.getCurrentData(), currentlyLoadedFile);
                         });
                     });
                 },
@@ -339,7 +347,7 @@ const menu = Menu.buildFromTemplate(template);
 Menu.setApplicationMenu(menu);
 
 const save = function (notify) {
-    fs.writeFile(currentlyLoadedFile, JSON.stringify(currentData), 'utf8',  (err) => {
+    fs.writeFile(currentlyLoadedFile, JSON.stringify(data.getCurrentData()), 'utf8',  (err) => {
         if (err) {
             throw err;
         }
@@ -369,49 +377,5 @@ const saveAs = function () {
 
         currentlyLoadedFile = filePath;
         save(true);
-    });
-};
-
-const exportCsv = function () {
-    const options = {
-        title: 'Spielstand als CSV exportieren',
-        //defaultPath: '/path/to/something/',
-        //buttonLabel: 'Do it',
-        filters: [
-            { name: 'csv', extensions: ['csv'] }
-        ],
-        //properties: ['showHiddenFiles'],
-        //message: 'This message will only be shown on macOS'
-    };
-
-    dialog.showSaveDialog(mainWindow, options, (filePath) => {
-        if (undefined === filePath) {
-            return;
-        }
-
-        var output = '';
-        for (var i = 0; i < currentData.results.length; i++) {
-            var resultLine = currentData.results[i];
-            var data = [];
-            var keys = Object.keys(resultLine);
-
-            data.push(resultLine.team);
-            for (var j = 0; j < keys.length; j++) {
-                var key = keys[j];
-                if (false === isNaN(parseInt(key))) {
-                    data.push(resultLine[key]);
-                }
-            }
-
-            output += data.join(';') + "\n";
-        }
-
-        fs.writeFile(filePath, output, 'utf8',  (err) => {
-            if (err) {
-                throw err;
-            }
-
-            mainWindow.send('file-exported', filePath);
-        });
     });
 };

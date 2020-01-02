@@ -30,9 +30,11 @@
             Export <i class="dropdown icon"></i>
             <div class="menu">
                 <a id="btnExportCSV" class="item"><i class="icon share square"></i> Ergebnisse als CSV</a>
+                <a id="btnExportRankingCSV" class="item"><i class="icon share square"></i> Rangliste als CSV</a>
             </div>
         </div>
         <a id="btnShowRemote" class="item"><i class="icon chart pie"></i> Fernzugriff</a>
+        <a id="btnShowRanking" class="item"><i class="icon list ol"></i> Rangliste</a>
         <!--
         <div class="right menu">
             <a class="item">Sign Up</a>
@@ -77,6 +79,22 @@
     <div class="content">
         <p>Unter folgenden Adressen ist die Weboberfläche erreichbar:</p>
         <ul class="content-addresses"></ul>
+    </div>
+    <div class="actions">
+        <div class="ui ok button">
+            Schließen
+        </div>
+    </div>
+</div>
+
+<div class="ui modal" id="ranking-modal">
+    <div class="ui icon header">
+        Rangliste
+    </div>
+    <div class="content">
+        <table>
+            <tbody class="ranking-content"></tbody>
+        </table>
     </div>
     <div class="actions">
         <div class="ui ok button">

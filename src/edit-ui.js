@@ -142,8 +142,16 @@ var triggerExportCsv = function () {
     ipc.send('export-csv', getResults());
 };
 
+var triggerExportRankingCsv = function () {
+    ipc.send('export-ranking-csv');
+};
+
 var showRemoteModal = function () {
     ipc.send('get-ip-addresses');
+};
+
+var showRanking = function () {
+    ipc.send('show-ranking');
 };
 
 ipc.on('return-get-ip-addresses', function (sender, port, addresses) {
@@ -171,20 +179,55 @@ ipc.on('return-get-ip-addresses', function (sender, port, addresses) {
     $('#remote-info-modal .content-addresses').html(content);
 
     $('#remote-info-modal').modal({
-        closable: true
+        closable: true,
     });
 
     $('#remote-info-modal').modal('show');
 });
 
+ipc.on('return-show-ranking', function (sender, ranking) {
+    $('.ranking-content').html('');
+    for (var i = 0; i < ranking.length; i++) {
+        var result = ranking[i];
+
+        $('.ranking-content').append(
+            '<tr><td class="rank">' + result.rank + '</td><td class="teamName">' + result.team + '</td><td class="sum">' + result.sum + '</td></tr>'
+        );
+    }
+
+    $('#ranking-modal').modal('show');
+});
+
 $('#btnAddRow').on('click', addRow);
 $('#btnAddColumn').on('click', addColumn);
 $('#btnExportCSV').on('click', triggerExportCsv);
+$('#btnExportRankingCSV').on('click', triggerExportRankingCsv);
 $('#btnShowRemote').on('click', showRemoteModal);
+$('#btnShowRanking').on('click', showRanking);
 
 $('#scoreBoard').on('click', '.delete-row', deleteRow);
 $('#scoreBoard').on('click', '.delete-column', deleteColumn);
 $('#scoreBoard').on('change', 'input', valueChanged);
+
+$('#scoreBoardBody').on('keyup', 'input', function (e) {
+    if ($(this).is(":focus") && (13 === e.keyCode)) {
+        var row = $(this).closest('tr');
+        var cell = $(this).closest('td');
+        var nextRow = $(row).next('tr');
+        var index = $('td', row).index(cell);
+        var nextInput = $('td', nextRow).eq(index).find('input');
+
+        if (nextInput.length <= 0) {
+            nextInput = $('#scoreBoardBody tr:first td').eq(index+1).find('input');
+        }
+
+        if (nextInput.length <= 0) {
+            nextInput = $('#scoreBoardBody tr:first td:first').find('input');
+        }
+
+        nextInput.focus();
+    }
+});
 
 
 // Open all "external links" in system's browser
