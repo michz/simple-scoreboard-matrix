@@ -8,6 +8,7 @@ const lookup = require('mime-types').lookup;
 const os = require('os');
 
 const fileExport = require('./fileExport');
+const data = require('./data');
 
 const httpPort = 38480;
 
@@ -67,15 +68,12 @@ app.on('activate', function () {
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and require them here.
 
-var currentlyLoadedFile = null;
-var currentData = {
-    results: [],
-};
+let currentlyLoadedFile = null;
 
 const apiHandler = function (url, req, res) {
     if (url === 'getData') {
         res.setHeader('content-type', 'application/json');
-        res.write(JSON.stringify(currentData));
+        res.write(JSON.stringify(data.getCurrentData()));
         res.end();
         return;
     }
@@ -88,7 +86,7 @@ const ipc = require('electron').ipcMain;
 
 ipc.on('update-results', function (event, arg) {
     //win.webContents.send('targetPriceVal', arg)
-    currentData.results = arg;
+    data.setCurrentDataResults(arg);
 
     if (null !== currentlyLoadedFile) {
         save(false);
@@ -98,16 +96,16 @@ ipc.on('update-results', function (event, arg) {
 });
 
 ipc.on('export-csv', function (event, arg) {
-    fileExport.csvResults(currentData, mainWindow);
+    fileExport.csvResults(data.getCurrentData(), mainWindow);
 });
 
 ipc.on('export-ranking-csv', function (event, arg) {
-    fileExport.csvRanking(getRanking(), mainWindow);
+    fileExport.csvRanking(data.getRanking(), mainWindow);
 });
 
 ipc.on('get-ip-addresses', function (event) {
-    var addresses = [];
-    var interfaces = os.networkInterfaces();
+    let addresses = [];
+    const interfaces = os.networkInterfaces();
 
     Object.keys(interfaces).forEach(function (ifname) {
         interfaces[ifname].forEach(function (iface) {
@@ -127,33 +125,8 @@ ipc.on('get-ip-addresses', function (event) {
     mainWindow.send('return-get-ip-addresses', httpPort, addresses);
 });
 
-const getRanking = function () {
-    let results = [];
-    let copiedData = JSON.parse(JSON.stringify(currentData));
-    copiedData.results.sort((a, b) => (parseFloat(a.sum) < parseFloat(b.sum)) ? 1 : -1);
-
-    let rank = 0;
-    let lastSum = 0;
-    for (let i = 0; i < copiedData.results.length; i++) {
-        let result = copiedData.results[i];
-
-        if (result.sum !== lastSum) {
-            rank++;
-        }
-
-        results.push({
-            rank: rank,
-            team: result.team,
-            sum: result.sum,
-        });
-
-        lastSum = result.sum;
-    }
-    return results;
-};
-
 ipc.on('show-ranking', function (event, arg) {
-    mainWindow.send('return-show-ranking', getRanking());
+    mainWindow.send('return-show-ranking', data.getRanking());
 });
 
 
@@ -161,7 +134,7 @@ ipc.on('show-ranking', function (event, arg) {
 
 //create a server object:
 http.createServer(function (req, res) {
-    var url = req.url;
+    let url = req.url;
     if (url.startsWith('/api/')) {
         apiHandler(url.substr(5), req, res);
         return;
@@ -197,7 +170,7 @@ http.createServer(function (req, res) {
     }
 
     //var localFilePath = 'file://' + __dirname + '/remote' + url;
-    var localFilePath = __dirname + '/../remote' + url;
+    const localFilePath = __dirname + '/../remote' + url;
     if (fs.existsSync(localFilePath)) {
         res.setHeader('content-type', lookup(localFilePath) || 'application/octet-stream');
         res.write(fs.readFileSync(localFilePath));
@@ -239,8 +212,8 @@ const template = [
                 label: 'Neu',
                 click: function () {
                     currentlyLoadedFile = null;
-                    currentData = { results: [] };
-                    mainWindow.send('file-loaded', currentData, currentlyLoadedFile);
+                    data.setCurrentData({ results: [] });
+                    mainWindow.send('file-loaded', data.getCurrentData(), currentlyLoadedFile);
                 },
             },
             {
@@ -262,14 +235,14 @@ const template = [
                             return;
                         }
 
-                        fs.readFile(filePaths[0], 'utf8',  (err, data) => {
+                        fs.readFile(filePaths[0], 'utf8',  (err, fileContents) => {
                             if (err) {
                                 throw err;
                             }
 
                             currentlyLoadedFile = filePaths[0];
-                            currentData = JSON.parse(data);
-                            mainWindow.send('file-loaded', currentData, currentlyLoadedFile);
+                            data.setCurrentData(JSON.parse(fileContents));
+                            mainWindow.send('file-loaded', data.getCurrentData(), currentlyLoadedFile);
                         });
                     });
                 },
@@ -374,7 +347,7 @@ const menu = Menu.buildFromTemplate(template);
 Menu.setApplicationMenu(menu);
 
 const save = function (notify) {
-    fs.writeFile(currentlyLoadedFile, JSON.stringify(currentData), 'utf8',  (err) => {
+    fs.writeFile(currentlyLoadedFile, JSON.stringify(data.getCurrentData()), 'utf8',  (err) => {
         if (err) {
             throw err;
         }
