@@ -300,6 +300,9 @@ ipc.on('single-value-updated', function (sender, teamIdx, gameIdx, result) {
     var cell = $('.result', row).eq(gameIdx);
     cell.val(result);
 
+    $('#scoreBoardBody .highlight-yellow').removeClass('highlight-yellow');
+    cell.addClass('highlight-yellow');
+
     // Recalculate sums and save them back to data storage (as sums are currently updated by the gui... bad design...)
     valueChanged();
 });

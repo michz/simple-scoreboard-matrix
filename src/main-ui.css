@@ -126,3 +126,22 @@ body {
 #ranking-modal .content td.rank:after {
     content: '.';
 }
+
+@keyframes highlight-yellow {
+    0% {
+        background: #fff105
+    }
+    25% {
+        background: #75ff4d;
+    }
+    50% {
+        background: #fff105;
+    }
+    100% {
+        background: none;
+    }
+}
+
+.highlight-yellow {
+    animation: highlight-yellow 5s;
+}
