@@ -295,6 +295,17 @@ ipc.on('file-exported', function (sender, filePath) {
     toastr.success('Ergebnisse wurden exportiert');
 });
 
+ipc.on('single-value-updated', function (sender, teamIdx, gameIdx, result) {
+    var row = $('#scoreBoardBody tr').eq(teamIdx);
+    var cell = $('.result', row).eq(gameIdx);
+    cell.val(result);
+
+    $('#scoreBoardBody .highlight-yellow').removeClass('highlight-yellow');
+    cell.addClass('highlight-yellow');
+
+    // Recalculate sums and save them back to data storage (as sums are currently updated by the gui... bad design...)
+    valueChanged();
+});
 
 // Start without loaded data
 updateSums();
@@ -309,6 +320,8 @@ toastr.options.extendedTimeOut = 5000;    // How long the toast will display aft
 $(document).ready(function() {
     $('.ui.dropdown').dropdown();
     //$('.ui.menu').menu(); // Does not work and is not needed?
+
+    ipc.send('load-last-file');
 });
 
 /*

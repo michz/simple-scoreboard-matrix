@@ -1,0 +1,54 @@
+html {}
+
+body {
+    width: 100vw;
+    height: 100vh;
+
+    padding: 1rem;
+}
+
+#scoreBoard {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+#scoreBoard td {
+    padding: 1.5rem 0.1rem;
+
+    border: 1px solid #888;
+
+    text-align: center;
+    font-size: 1.5rem;
+}
+
+#scoreBoard td.row-header {
+    text-align: left;
+}
+
+#input-modal input {
+    width: 100%;
+    padding: 1rem;
+
+    text-align: center;
+    font-size: 1.2rem;
+}
+
+@keyframes highlight-green {
+    0% {
+        background: #75ff4d
+    }
+    50% {
+        background: #75ff4d;
+    }
+    100% {
+        background: none;
+    }
+}
+
+.highlight-green {
+    animation: highlight-green 3s;
+}
+
+#btnRefresh {
+    margin: 2rem;
+}

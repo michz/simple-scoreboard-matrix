@@ -9,14 +9,18 @@ const os = require('os');
 
 const fileExport = require('./fileExport');
 const data = require('./data');
+const settings = require('./settings');
 
 const httpPort = 38480;
+
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow;
 
 function createWindow() {
+    settings.load();
+
     // Create the browser window.
     mainWindow = new BrowserWindow({
         width: 800,
@@ -76,6 +80,16 @@ const apiHandler = function (url, req, res) {
         res.write(JSON.stringify(data.getCurrentData()));
         res.end();
         return;
+    } else if (url === 'setDataItem') {
+        res.statusCode = 204;
+        req.on('data', (d) => {
+            const singleResult = JSON.parse(d);
+            const currentResults = data.getCurrentDataResults();
+            currentResults[singleResult.teamIdx]['' + (singleResult.gameIdx+1)] = singleResult.result;
+            mainWindow.send('single-value-updated', singleResult.teamIdx, singleResult.gameIdx, singleResult.result);
+        });
+        res.end();
+        return;
     }
 
     res.statusCode = 400;
@@ -129,6 +143,13 @@ ipc.on('show-ranking', function (event, arg) {
     mainWindow.send('return-show-ranking', data.getRanking());
 });
 
+ipc.on('load-last-file', function (event) {
+    const lastLoadedFile = settings.get().lastLoadedFilePath;
+    if (null !== lastLoadedFile) {
+        load(lastLoadedFile);
+    }
+});
+
 
 // @TODO Put into own server.js ?
 
@@ -158,6 +179,21 @@ http.createServer(function (req, res) {
     } else if (url === '/reset.css') {
         res.setHeader('content-type', 'text/css');
         res.write(fs.readFileSync(__dirname + '/../node_modules/modern-css-reset/dist/reset.min.css'));
+        res.end();
+        return;
+    } else if (url === '/semantic.css') {
+        res.setHeader('content-type', 'text/css');
+        res.write(fs.readFileSync(__dirname + '/../node_modules/semantic-ui-css/semantic.min.css'));
+        res.end();
+        return;
+    } else if (url === '/semantic.js') {
+        res.setHeader('content-type', 'application/javascript');
+        res.write(fs.readFileSync(__dirname + '/../node_modules/semantic-ui-css/semantic.min.js'));
+        res.end();
+        return;
+    } else if (url === '/themes/default/assets/fonts/icons.woff2') {
+        res.setHeader('content-type', 'font/woff2');
+        res.write(fs.readFileSync(__dirname + '/../node_modules/semantic-ui-css/themes/default/assets/fonts/icons.woff2'));
         res.end();
         return;
     }
@@ -212,6 +248,8 @@ const template = [
                 label: 'Neu',
                 click: function () {
                     currentlyLoadedFile = null;
+                    settings.get().lastLoadedFilePath = currentlyLoadedFile;
+                    settings.save();
                     data.setCurrentData({ results: [] });
                     mainWindow.send('file-loaded', data.getCurrentData(), currentlyLoadedFile);
                 },
@@ -235,15 +273,7 @@ const template = [
                             return;
                         }
 
-                        fs.readFile(filePaths[0], 'utf8',  (err, fileContents) => {
-                            if (err) {
-                                throw err;
-                            }
-
-                            currentlyLoadedFile = filePaths[0];
-                            data.setCurrentData(JSON.parse(fileContents));
-                            mainWindow.send('file-loaded', data.getCurrentData(), currentlyLoadedFile);
-                        });
+                        load(filePaths[0]);
                     });
                 },
             },
@@ -346,6 +376,20 @@ const template = [
 const menu = Menu.buildFromTemplate(template);
 Menu.setApplicationMenu(menu);
 
+const load = function (filePath) {
+    fs.readFile(filePath, 'utf8',  (err, fileContents) => {
+        if (err) {
+            throw err;
+        }
+
+        currentlyLoadedFile = filePath;
+        settings.get().lastLoadedFilePath = currentlyLoadedFile;
+        settings.save();
+        data.setCurrentData(JSON.parse(fileContents));
+        mainWindow.send('file-loaded', data.getCurrentData(), currentlyLoadedFile);
+    });
+};
+
 const save = function (notify) {
     fs.writeFile(currentlyLoadedFile, JSON.stringify(data.getCurrentData()), 'utf8',  (err) => {
         if (err) {
@@ -376,6 +420,8 @@ const saveAs = function () {
         }
 
         currentlyLoadedFile = filePath;
+        settings.get().lastLoadedFilePath = currentlyLoadedFile;
+        settings.save();
         save(true);
     });
 };
