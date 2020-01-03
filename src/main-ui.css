@@ -5,6 +5,11 @@ body {
     padding: 6px;
 }
 
+div, p, span, table, tr, td, th {
+    cursor: default;
+    user-select: none;
+}
+
 #scoreBoard {
     width: 100%;
 
@@ -71,7 +76,7 @@ body {
     height: 100%;
 
     border: 0;
-    font-size: 1.4em;
+    font-size: 1.2em;
     text-align: center;
 }
 
