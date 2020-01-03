@@ -76,6 +76,17 @@ const apiHandler = function (url, req, res) {
         res.write(JSON.stringify(data.getCurrentData()));
         res.end();
         return;
+    } else if (url === 'setDataItem') {
+        res.statusCode = 204;
+        req.on('data', (d) => {
+            const singleResult = JSON.parse(d);
+            console.log(singleResult); // @TODO remove
+            const currentResults = data.getCurrentDataResults();
+            currentResults[singleResult.teamIdx]['' + (singleResult.gameIdx+1)] = singleResult.result;
+            mainWindow.send('single-value-updated', singleResult.teamIdx, singleResult.gameIdx, singleResult.result);
+        });
+        res.end();
+        return;
     }
 
     res.statusCode = 400;
@@ -158,6 +169,16 @@ http.createServer(function (req, res) {
     } else if (url === '/reset.css') {
         res.setHeader('content-type', 'text/css');
         res.write(fs.readFileSync(__dirname + '/../node_modules/modern-css-reset/dist/reset.min.css'));
+        res.end();
+        return;
+    } else if (url === '/semantic.css') {
+        res.setHeader('content-type', 'text/css');
+        res.write(fs.readFileSync(__dirname + '/../node_modules/semantic-ui-css/semantic.min.css'));
+        res.end();
+        return;
+    } else if (url === '/semantic.js') {
+        res.setHeader('content-type', 'application/javascript');
+        res.write(fs.readFileSync(__dirname + '/../node_modules/semantic-ui-css/semantic.min.js'));
         res.end();
         return;
     }

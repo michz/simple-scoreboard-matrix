@@ -295,6 +295,14 @@ ipc.on('file-exported', function (sender, filePath) {
     toastr.success('Ergebnisse wurden exportiert');
 });
 
+ipc.on('single-value-updated', function (sender, teamIdx, gameIdx, result) {
+    var row = $('#scoreBoardBody tr').eq(teamIdx);
+    var cell = $('.result', row).eq(gameIdx);
+    cell.val(result);
+
+    // Recalculate sums and save them back to data storage (as sums are currently updated by the gui... bad design...)
+    valueChanged();
+});
 
 // Start without loaded data
 updateSums();

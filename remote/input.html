@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="de">
+    <head>
+        <meta charset="UTF-8">
+        <title>Simple Scoreboard - Eingabe</title>
+        <link href="reset.css" rel="stylesheet" type="text/css">
+        <link href="semantic.css" rel="stylesheet" type="text/css">
+        <link href="data.css" rel="stylesheet" type="text/css">
+        <script>
+            window.serverUrl = 'http://' + window.location.host;
+        </script>
+    </head>
+    <body>
+        <table id="scoreBoard">
+            <thead id="scoreBoardHead">
+            <tr id="scoreBoardTitle">
+                <th></th>
+                <th>Gesamt</th>
+            </tr>
+            </thead>
+            <tbody id="scoreBoardBody">
+            </tbody>
+        </table>
+
+        <div class="ui modal" id="input-modal">
+            <div class="ui icon header">
+                Eingabe
+            </div>
+            <div class="content">
+                <input type="hidden" name="teamIdx">
+                <input type="hidden" name="gameIdx">
+                <input type="number" name="result">
+            </div>
+            <div class="actions">
+                <div class="ui cancel deny button">
+                    Abbrechen
+                </div>
+                <div class="ui ok button">
+                    OK
+                </div>
+            </div>
+        </div>
+
+        <script src="jquery.js"></script>
+        <script src="semantic.js"></script>
+        <script src="input.js"></script>
+    </body>
+</html>
