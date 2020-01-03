@@ -317,6 +317,8 @@ toastr.options.extendedTimeOut = 5000;    // How long the toast will display aft
 $(document).ready(function() {
     $('.ui.dropdown').dropdown();
     //$('.ui.menu').menu(); // Does not work and is not needed?
+
+    ipc.send('load-last-file');
 });
 
 /*
