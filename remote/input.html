@@ -5,7 +5,7 @@
         <title>Simple Scoreboard - Eingabe</title>
         <link href="reset.css" rel="stylesheet" type="text/css">
         <link href="semantic.css" rel="stylesheet" type="text/css">
-        <link href="data.css" rel="stylesheet" type="text/css">
+        <link href="input.css" rel="stylesheet" type="text/css">
         <script>
             window.serverUrl = 'http://' + window.location.host;
         </script>
@@ -21,8 +21,9 @@
             <tbody id="scoreBoardBody">
             </tbody>
         </table>
+        <button class="ui labeled icon button" id="btnRefresh"><i class="icon refresh"></i> Aktualisieren</button>
 
-        <div class="ui modal" id="input-modal">
+        <div class="ui mini modal" id="input-modal">
             <div class="ui icon header">
                 Eingabe
             </div>
@@ -35,7 +36,7 @@
                 <div class="ui cancel deny button">
                     Abbrechen
                 </div>
-                <div class="ui ok button">
+                <div class="ui ok primary button">
                     OK
                 </div>
             </div>

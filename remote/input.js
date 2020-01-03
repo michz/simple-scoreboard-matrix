@@ -50,7 +50,7 @@ var updateSums = function () {
     });
 };
 
-var updateData = function () {
+var updateData = function (callback) {
     $.get({
         url: window.serverUrl + '/api/getData',
         success: function (data) {
@@ -87,6 +87,10 @@ var updateData = function () {
             }
 
             updateSums();
+
+            if (undefined !== callback) {
+                callback();
+            }
         },
         error: function () {
             // @TODO Display connection problems error
@@ -100,6 +104,16 @@ var updateData = function () {
 $(document).ready(function() {
     updateData();
 
+    $('#input-modal input').on('keyup', function (e) {
+        if (13 === e.keyCode) {
+            $('#input-modal .ok').click();
+        }
+    });
+
+    $('#btnRefresh').on('click', function () {
+        updateData();
+    });
+
     $(document).on('click', '.result', function () {
         var inputModal = $('#input-modal');
 
@@ -111,6 +125,9 @@ $(document).ready(function() {
         inputModal.find('input[name=teamIdx]').val(rowIndex);
         inputModal.find('input[name=gameIdx]').val(cellIndex);
         inputModal.find('input[name=result]').val($(this).text());
+        inputModal.find('.header').text(
+            $('#scoreBoardBody tr').eq(rowIndex).find('.row-header').text() + ' / Spiel ' + (cellIndex + 1)
+        );
 
         inputModal.modal({
             closable: false,
@@ -130,7 +147,11 @@ $(document).ready(function() {
                     }),
                     success: function (data) {
                         // @TODO Update input field and visualize success
-                        updateData();
+                        updateData(function () {
+                            var row = $('#scoreBoardBody tr').eq(rowIndex);
+                            var cell = $('.result', row).eq(cellIndex);
+                            $(cell).addClass('highlight-green');
+                        });
                     },
                     error: function (data) {
                         // @TODO Visualize error

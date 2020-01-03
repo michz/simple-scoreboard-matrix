@@ -80,7 +80,6 @@ const apiHandler = function (url, req, res) {
         res.statusCode = 204;
         req.on('data', (d) => {
             const singleResult = JSON.parse(d);
-            console.log(singleResult); // @TODO remove
             const currentResults = data.getCurrentDataResults();
             currentResults[singleResult.teamIdx]['' + (singleResult.gameIdx+1)] = singleResult.result;
             mainWindow.send('single-value-updated', singleResult.teamIdx, singleResult.gameIdx, singleResult.result);
@@ -179,6 +178,11 @@ http.createServer(function (req, res) {
     } else if (url === '/semantic.js') {
         res.setHeader('content-type', 'application/javascript');
         res.write(fs.readFileSync(__dirname + '/../node_modules/semantic-ui-css/semantic.min.js'));
+        res.end();
+        return;
+    } else if (url === '/themes/default/assets/fonts/icons.woff2') {
+        res.setHeader('content-type', 'font/woff2');
+        res.write(fs.readFileSync(__dirname + '/../node_modules/semantic-ui-css/themes/default/assets/fonts/icons.woff2'));
         res.end();
         return;
     }
