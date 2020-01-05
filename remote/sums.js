@@ -1,6 +1,7 @@
 var updateData = function () {
     $.get({
         url: window.serverUrl + '/api/getData',
+        timeout: 5000,
         success: function (data) {
             $('#results').empty();
 
@@ -70,15 +71,47 @@ $(document).ready(function() {
                 yAxes: [{
                     display: true,
                     ticks: {
-                        fontSize: 24,
+                        fontSize: 20,
+                        fontColor: '#000',
                         callback: function (label, idx, allLabels, c) {
                             // TODO Insert line breaks / shorten ?
-                            label = label.split(' ');
-                            return label;
+                            if (label.length > 30) {
+                                return label.substr(0, 14) + '...' + label.substr(-14);
+                            } else {
+                                return label;
+                            }
                         },
                     },
                 }],
             },
+            "animation": {
+                "duration": 1,
+                "onComplete": function () {
+                    var chartInstance = this.chart,
+                        ctx = chartInstance.ctx;
+
+                    ctx.font = Chart.helpers.fontString(chartInstance.options.scales.yAxes[0].ticks.fontSize * 1.3, 'bold', Chart.defaults.global.defaultFontFamily);
+                    ctx.textBaseline = 'middle';
+
+                    this.data.datasets.forEach(function (dataset, i) {
+                        var meta = chartInstance.controller.getDatasetMeta(i);
+                        meta.data.forEach(function (bar, index) {
+                            var data = dataset.data[index];
+                            var barWidth = bar._model.x - bar._model.base;
+
+                            if (barWidth < 50) {
+                                ctx.fillStyle = '#000';
+                                ctx.textAlign = 'left';
+                                ctx.fillText(data, bar._model.x + 10, bar._model.y);
+                            } else {
+                                ctx.fillStyle = '#FFF';
+                                ctx.textAlign = 'right';
+                                ctx.fillText(data, bar._model.x - 10, bar._model.y);
+                            }
+                        });
+                    });
+                },
+            }
         }
     });
 });
