@@ -27,7 +27,7 @@
     "chart.js": "^2.9.3",
     "electron-compile": "^6.4.4",
     "electron-squirrel-startup": "^1.0.0",
-    "jquery": "^3.4.1",
+    "jquery": "^3.5.0",
     "mime-types": "^2.1.25",
     "modern-css-reset": "^1.0.4",
     "semantic-ui-css": "^2.4.1",
