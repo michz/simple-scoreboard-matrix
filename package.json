@@ -20,7 +20,7 @@
   "devDependencies": {
     "electron": "^7.2.4",
     "electron-forge": "^5.2.4",
-    "electron-forge-maker-nsis": "^22.2.0",
+    "electron-forge-maker-nsis": "^22.8.1",
     "electron-prebuilt-compile": "4.0.0"
   },
   "dependencies": {
@@ -28,8 +28,8 @@
     "electron-compile": "^6.4.4",
     "electron-squirrel-startup": "^1.0.0",
     "jquery": "^3.5.0",
-    "mime-types": "^2.1.25",
-    "modern-css-reset": "^1.0.4",
+    "mime-types": "^2.1.27",
+    "modern-css-reset": "^1.1.1",
     "semantic-ui-css": "^2.4.1",
     "toastr": "^2.1.4"
   }
