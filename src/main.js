@@ -268,12 +268,12 @@ const template = [
                         //message: 'This message will only be shown on macOS'
                     };
 
-                    dialog.showOpenDialog(mainWindow, options, (filePaths) => {
-                        if (undefined === filePaths || filePaths.length < 1) {
+                    dialog.showOpenDialog(mainWindow, options).then((result) => {
+                        if (result.canceled === true || undefined === result.filePaths || result.filePaths.length < 1) {
                             return;
                         }
 
-                        load(filePaths[0]);
+                        load(result.filePaths[0]);
                     });
                 },
             },
@@ -393,6 +393,7 @@ const load = function (filePath) {
 const save = function (notify) {
     fs.writeFile(currentlyLoadedFile, JSON.stringify(data.getCurrentData()), 'utf8',  (err) => {
         if (err) {
+            console.error(err);
             throw err;
         }
 
@@ -414,14 +415,16 @@ const saveAs = function () {
         //message: 'This message will only be shown on macOS'
     };
 
-    dialog.showSaveDialog(mainWindow, options, (filePath) => {
-        if (undefined === filePath) {
+    dialog.showSaveDialog(mainWindow, options).then((result) => {
+        if (result.canceled === true || undefined === result.filePath) {
             return;
         }
 
-        currentlyLoadedFile = filePath;
+        currentlyLoadedFile = result.filePath;
         settings.get().lastLoadedFilePath = currentlyLoadedFile;
         settings.save();
         save(true);
+    }).catch((...args) => {
+        console.warn('failed/rejected with', args)
     });
 };

@@ -13,8 +13,8 @@ const csvResults = function (currentData, mainWindow) {
         //message: 'This message will only be shown on macOS'
     };
 
-    dialog.showSaveDialog(mainWindow, options, (filePath) => {
-        if (undefined === filePath) {
+    dialog.showSaveDialog(mainWindow, options).then((result) => {
+        if (result.canceled === true || undefined === result.filePath) {
             return;
         }
 
@@ -35,12 +35,12 @@ const csvResults = function (currentData, mainWindow) {
             output += data.join(';') + "\n";
         }
 
-        fs.writeFile(filePath, output, 'utf8',  (err) => {
+        fs.writeFile(result.filePath, output, 'utf8',  (err) => {
             if (err) {
                 throw err;
             }
 
-            mainWindow.send('file-exported', filePath);
+            mainWindow.send('file-exported', result.filePath);
         });
     });
 };
@@ -57,8 +57,8 @@ const csvRanking = function (ranking, mainWindow) {
         //message: 'This message will only be shown on macOS'
     };
 
-    dialog.showSaveDialog(mainWindow, options, (filePath) => {
-        if (undefined === filePath) {
+    dialog.showSaveDialog(mainWindow, options).then((result) => {
+        if (result.canceled === true || undefined === result.filePath) {
             return;
         }
 
@@ -69,12 +69,12 @@ const csvRanking = function (ranking, mainWindow) {
             output += Object.values(resultLine).join(';') + "\n";
         }
 
-        fs.writeFile(filePath, output, 'utf8',  (err) => {
+        fs.writeFile(result.filePath, output, 'utf8',  (err) => {
             if (err) {
                 throw err;
             }
 
-            mainWindow.send('file-exported', filePath);
+            mainWindow.send('file-exported', result.filePath);
         });
     });
 };
