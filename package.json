@@ -21,13 +21,13 @@
     "electron": "^10.1.0",
     "electron-forge": "^5.2.4",
     "electron-forge-maker-nsis": "^22.8.1",
-    "electron-prebuilt-compile": "4.0.0"
+    "electron-prebuilt-compile": "^8.2.0"
   },
   "dependencies": {
     "chart.js": "^2.9.3",
     "electron-compile": "^6.4.4",
     "electron-squirrel-startup": "^1.0.0",
-    "jquery": "^3.5.0",
+    "jquery": "^3.5.1",
     "mime-types": "^2.1.27",
     "modern-css-reset": "^1.1.1",
     "semantic-ui-css": "^2.4.1",
