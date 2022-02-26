@@ -2,14 +2,17 @@
 const {app, BrowserWindow, dialog, Menu} = require('electron');
 const path = require('path');
 const isMac = process.platform === 'darwin';
-const http = require('http');
 const fs = require('fs');
-const lookup = require('mime-types').lookup;
 const os = require('os');
 
 const fileExport = require('./fileExport');
 const data = require('./data');
 const settings = require('./settings');
+
+const HttpServer = require('./HttpServer').default;
+
+const SSE = require('express-sse');
+const sse = new SSE();
 
 const httpPort = 38480;
 
@@ -151,76 +154,21 @@ ipc.on('load-last-file', function (event) {
 });
 
 
-// @TODO Put into own server.js ?
+// HTTP server
+console.log(HttpServer);
+const httpServer = new HttpServer(
+    httpPort,
+    apiHandler,
+    sse
+);
+httpServer.run();
 
-//create a server object:
-http.createServer(function (req, res) {
-    let url = req.url;
-    if (url.startsWith('/api/')) {
-        apiHandler(url.substr(5), req, res);
-        return;
-    } else if (url.endsWith('/')) {
-        url += 'index.html';
-    } else if (url === '/jquery.js') {
-        res.setHeader('content-type', 'application/javascript');
-        res.write(fs.readFileSync(__dirname + '/../node_modules/jquery/dist/jquery.min.js'));
-        res.end();
-        return;
-    } else if (url === '/robots.txt') {
-        res.setHeader('content-type', 'text/plain');
-        res.write('Disallow: /');
-        res.end();
-        return;
-    } else if (url === '/chart.js') {
-        res.setHeader('content-type', 'application/javascript');
-        res.write(fs.readFileSync(__dirname + '/../node_modules/chart.js/dist/Chart.min.js'));
-        res.end();
-        return;
-    } else if (url === '/reset.css') {
-        res.setHeader('content-type', 'text/css');
-        res.write(fs.readFileSync(__dirname + '/../node_modules/modern-css-reset/dist/reset.min.css'));
-        res.end();
-        return;
-    } else if (url === '/semantic.css') {
-        res.setHeader('content-type', 'text/css');
-        res.write(fs.readFileSync(__dirname + '/../node_modules/semantic-ui-css/semantic.min.css'));
-        res.end();
-        return;
-    } else if (url === '/semantic.js') {
-        res.setHeader('content-type', 'application/javascript');
-        res.write(fs.readFileSync(__dirname + '/../node_modules/semantic-ui-css/semantic.min.js'));
-        res.end();
-        return;
-    } else if (url === '/themes/default/assets/fonts/icons.woff2') {
-        res.setHeader('content-type', 'font/woff2');
-        res.write(fs.readFileSync(__dirname + '/../node_modules/semantic-ui-css/themes/default/assets/fonts/icons.woff2'));
-        res.end();
-        return;
-    }
-
-    // Make sure that there is not ".." in url (very rough input sanitizing)
-    if (url.search(/\.\./) > -1) {
-        res.statusCode = 400;
-        res.end();
-        return;
-    }
-
-    //var localFilePath = 'file://' + __dirname + '/remote' + url;
-    const localFilePath = __dirname + '/../remote' + url;
-    if (fs.existsSync(localFilePath)) {
-        res.setHeader('content-type', lookup(localFilePath) || 'application/octet-stream');
-        res.write(fs.readFileSync(localFilePath));
-        res.end();
-        return;
-    }
-
-    console.log('Not found: ' + req.url);
-
-    // Do not know what to do with the request.
-    res.statusCode = 404;
-    res.end(); //end the response
-}).listen(httpPort);
-
+// Server Sent Events to sync all clients
+function sendClientHeartbeatRegularily() {
+    sse.send('test-content', 'server-alive-event');
+    setTimeout(sendClientHeartbeatRegularily, 2000);
+}
+sendClientHeartbeatRegularily();
 
 // application menu
 

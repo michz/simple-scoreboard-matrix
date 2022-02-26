@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
+    <meta http-equiv="Content-Security-Policy"
+          content="default-src 'self' data: ; script-src 'self' 'unsafe-inline'; font-src 'self' data: *; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com">
+    <meta http-equiv="X-Content-Security-Policy"
+          content="default-src 'self' data: ; script-src 'self' 'unsafe-inline'; font-src 'self' data: *; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com">
+
+    <link href="node_modules/modern-css-reset/dist/reset.min.css" rel="stylesheet" type="text/css">
+    <link href="node_modules/fomantic-ui-css/semantic.min.css" rel="stylesheet" type="text/css">
+    <link href="node_modules/toastr/build/toastr.min.css" rel="stylesheet" type="text/css">
+    <link href="main-ui.css" rel="stylesheet" type="text/css">
+    <title>Simple Scoreboard Matrix</title>
+
+    <script>
+        /*
+
+        window.$ = window.jQuery = require('jquery');
+        window.toastr = require('toastr');
+         */
+
+        // @TODO
+        window.serverUrl = 'http://localhost:38480';
+    </script>
+</head>
+<body>
+
+<div class="ui pointing menu">
+    <a class="active item">
+        Punkteeingabe
+    </a>
+    <a class="item">
+        Punktestand (Balken)
+    </a>
+    <div class="right menu">
+        <div class="item">
+            <i class="chevron up icon"></i>
+        </div>
+    </div>
+</div>
+<div class="ui segment">
+    <p></p>
+</div>
+
+
+
+<div id="button-row-menu">
+    <div class="ui compact menu">
+        <a id="btnAddRow" class="item"><i class="icon add"></i> Team hinzufügen</a>
+        <a id="btnAddColumn" class="item"><i class="icon add"></i> Runde hinzufügen</a>
+        <div class="ui dropdown item">
+            Export <i class="dropdown icon"></i>
+            <div class="menu">
+                <a id="btnExportCSV" class="item"><i class="icon share square"></i> Ergebnisse als CSV</a>
+                <a id="btnExportRankingCSV" class="item"><i class="icon share square"></i> Rangliste als CSV</a>
+            </div>
+        </div>
+        <a id="btnShowRemote" class="item"><i class="icon chart pie"></i> Fernzugriff</a>
+        <a id="btnShowRanking" class="item"><i class="icon list ol"></i> Rangliste</a>
+        <!--
+        <div class="right menu">
+            <a class="item">Sign Up</a>
+            <a class="item">Help</a>
+        </div>
+        -->
+    </div>
+</div>
+
+<table id="scoreBoard">
+    <thead id="scoreBoardHead">
+    <tr id="scoreBoardTitle">
+        <th></th>
+        <th>Gesamt</th>
+    </tr>
+    </thead>
+    <tbody id="scoreBoardBody">
+    </tbody>
+</table>
+
+<div class="ui basic modal" id="confirm-modal">
+    <div class="ui icon header">
+        <i class="exclamation icon"></i>
+    </div>
+    <div class="content">
+    </div>
+    <div class="actions">
+        <div class="ui red basic cancel deny inverted button">
+            Nein
+        </div>
+        <div class="ui green ok inverted button">
+            <i class="checkmark icon"></i>
+            Ja
+        </div>
+    </div>
+</div>
+
+<div class="ui modal" id="remote-info-modal">
+    <div class="ui icon header">
+        Fernzugriff
+    </div>
+    <div class="content">
+        <p>Unter folgenden Adressen ist die Weboberfläche erreichbar:</p>
+        <ul class="content-addresses"></ul>
+    </div>
+    <div class="actions">
+        <div class="ui ok button">
+            Schließen
+        </div>
+    </div>
+</div>
+
+<div class="ui modal" id="ranking-modal">
+    <div class="ui icon header">
+        Rangliste
+    </div>
+    <div class="content">
+        <table>
+            <tbody class="ranking-content"></tbody>
+        </table>
+    </div>
+    <div class="actions">
+        <div class="ui ok button">
+            Schließen
+        </div>
+    </div>
+</div>
+
+<script src="jquery.js"></script>
+<script src="node_modules/toastr/build/toastr.min.js"></script>
+<script src="node_modules/fomantic-ui-css/semantic.min.js"></script>
+<!--<script src="edit-ui.js"></script>-->
+
+<script>
+    //const EventSource = require('eventsource');
+
+    //const es = new EventSource('http://localhost:3000/sse');
+    const es = new EventSource('/sse');
+
+    es.addEventListener('server-alive-event', function (message) {
+        console.log('Server is alive: ', message)
+    });
+    es.addEventListener('*', function (message) {
+        console.log('message: ', message)
+    });
+
+
+    var countColumns = function () {
+        return $('#scoreBoardHead tr:first th').length - 2;
+    };
+
+    var addRow = function (skipValueChangedHandler) {
+        var rowContent = '';
+        var columnCount = countColumns();
+        for (var i = 0; i < columnCount; i++) {
+            rowContent += '<td><input class="result"></td>';
+        }
+
+        var row = '<tr>' +
+            '<td class="row-header"></td>' +
+            rowContent +
+            '<td class="sum"></td>' +
+            '</tr>';
+
+        $('#scoreBoardBody').append(row);
+
+        if (undefined === skipValueChangedHandler || true !== skipValueChangedHandler) {
+            valueChanged();
+        }
+    };
+
+    var addColumn = function (skipValueChangedHandler) {
+        var column = '<td class="result"></td>';
+        $('#scoreBoardHead tr th:last').before('<th class="result-header"><span class="column-number">' + (countColumns() + 1) + '</span></th>');
+
+        $('#scoreBoardBody tr').each(function (idx, element) {
+            $(element).find('td:last').before(column);
+        });
+
+        if (undefined === skipValueChangedHandler || true !== skipValueChangedHandler) {
+            valueChanged();
+        }
+    };
+
+    var updateSums = function () {
+        $('#scoreBoardBody tr').each(function (idx, element) {
+            var sum = 0;
+            $(element).find('.result').each(function (idx, resultElement) {
+                var value = parseFloat($(resultElement).text());
+                if (false === isNaN(value))  {
+                    sum += value;
+                }
+            });
+            $(element).find('.sum').text(sum);
+        });
+    };
+
+    var updateData = function (callback) {
+        $.get({
+            url: window.serverUrl + '/api/getData',
+            success: function (data) {
+                var results = data.results;
+                var countRows = results.length;
+
+                // clear current rows and columns
+                $('#scoreBoardBody').html('');
+                $('#scoreBoardHead .result-header').remove();
+
+                // Get (max) number of columns
+                var countColumns = 0;
+                for (var i = 0; i < countRows; i++) {
+                    countColumns = Math.max(countColumns, Object.keys(results[i]).length - 2);
+                }
+
+                for (var i = 0; i < countRows; i++) {
+                    addRow(true);
+                }
+
+                for (var i = 0; i < countColumns; i++) {
+                    addColumn(true);
+                }
+
+                for (var i = 0; i < countRows; i++) {
+                    var rowData = results[i];
+                    var row = $('#scoreBoardBody tr').eq(i);
+                    var columnCount = Object.keys(rowData).length - 2;
+
+                    row.find('.row-header').html(rowData.team);
+                    for (var j = 0; j <= columnCount; j++) {
+                        row.find('.result').eq(j-1).val(rowData['' + j]);
+                    }
+                }
+
+                updateSums();
+
+                if (undefined !== callback) {
+                    callback();
+                }
+            },
+            error: function () {
+                // @TODO Display connection problems error
+            },
+            complete: function () {
+                window.setTimeout(updateData, 15000);
+            },
+        });
+    };
+
+    updateData();
+
+
+</script>
+
+</body>
+</html>
